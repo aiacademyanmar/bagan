@@ -136,8 +136,8 @@ public class ExactUiActivity extends Activity {
     }
     @Override public boolean onTouchEvent(MotionEvent ev){
       if(ev.getAction()!=MotionEvent.ACTION_UP)return true;
-      float x=(ev.getX()-dest.left())/Math.max(1,dest.width());
-      float y=(ev.getY()-dest.top())/Math.max(1,dest.height());
+      float x=(ev.getX()-dest.left)/Math.max(1,dest.width());
+      float y=(ev.getY()-dest.top)/Math.max(1,dest.height());
       if(x<0||x>1||y<0||y>1)return true;
       for(int i=zones.size()-1;i>=0;i--){Zone z=zones.get(i);if(z.hit(x,y)){performClick();act(z);return true;}}
       if(page==1)go(2);
