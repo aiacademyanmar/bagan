@@ -4,7 +4,7 @@ plugins {
 }
 android {
     namespace = "asia.aaii.baganmuseum"
-    compileSdk = 37
+    compileSdk = 36
     defaultConfig {
         applicationId = "asia.aaii.baganmuseum"
         minSdk = 26
