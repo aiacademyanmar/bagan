@@ -9,6 +9,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.view.MotionEvent;
+import android.view.HapticFeedbackConstants;
+import android.view.SoundEffectConstants;
+import android.app.AlertDialog;
+import android.util.LruCache;
 import android.view.View;
 import android.view.WindowManager;
 import java.io.InputStream;
@@ -32,6 +36,12 @@ public class MainActivity extends Activity {
     private final ArrayList<Hit> hits = new ArrayList<>();
     private int current = 1;
     private Bitmap image;
+    private final LruCache<Integer, Bitmap> bitmapCache = new LruCache<Integer, Bitmap>(32 * 1024 * 1024) {
+        @Override protected int sizeOf(Integer k, Bitmap v) { return v.getByteCount(); }
+        @Override protected void entryRemoved(boolean evicted, Integer k, Bitmap old, Bitmap replacement) {
+            if (old != image && old != replacement && !old.isRecycled()) old.recycle();
+        }
+    };
     private ScreenView screen;
     private RealActions real;
 
@@ -45,7 +55,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // Preserve battery life; no forced keep-awake during heritage browsing.
         getWindow().getDecorView().setSystemUiVisibility(
             View.SYSTEM_UI_FLAG_FULLSCREEN |
             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
@@ -63,7 +73,8 @@ public class MainActivity extends Activity {
         b.putInt("page",current);super.onSaveInstanceState(b);
     }
     @Override protected void onDestroy() {
-        if(image!=null){image.recycle();image=null;}
+        image=null;
+        bitmapCache.evictAll();
         if(real!=null)real.close();
         super.onDestroy();
     }
@@ -76,13 +87,25 @@ public class MainActivity extends Activity {
         if(page<1||page>20||page==current&&image!=null)return;
         if(remember&&current!=page)visited.push(current);
         current=page;
-        if(image!=null){image.recycle();image=null;}
-        BitmapFactory.Options opt=new BitmapFactory.Options();
-        opt.inPreferredConfig=Bitmap.Config.RGB_565;
-        try(InputStream stream=getAssets().open(
-            String.format(Locale.US,"ui/screen_%02d.png",page))) {
-            image=BitmapFactory.decodeStream(stream,null,opt);
-        }catch(Exception ignored){}
+        image=bitmapCache.get(page);
+        if(image==null || image.isRecycled()){
+            BitmapFactory.Options opt=new BitmapFactory.Options();
+            // ARGB_8888 retains the original Full-HD PNG gradient/color fidelity.
+            opt.inPreferredConfig=Bitmap.Config.ARGB_8888;
+            try(InputStream stream=getAssets().open(
+                String.format(Locale.US,"ui/screen_%02d.png",page))) {
+                image=BitmapFactory.decodeStream(stream,null,opt);
+                if(image!=null) bitmapCache.put(page,image);
+            }catch(OutOfMemoryError oom) {
+                bitmapCache.evictAll();
+                opt.inPreferredConfig=Bitmap.Config.RGB_565;
+                try(InputStream stream=getAssets().open(
+                    String.format(Locale.US,"ui/screen_%02d.png",page))) {
+                    image=BitmapFactory.decodeStream(stream,null,opt);
+                    if(image!=null) bitmapCache.put(page,image);
+                }catch(Exception ignored){image=null;}
+            }catch(Exception ignored){image=null;}
+        }
         installZones();
         screen.invalidate();
     }
@@ -121,7 +144,7 @@ public class MainActivity extends Activity {
                 break;
             case 4:
                 bottom();
-                link(.04f,.18f,.96f,.84f,5);
+                link(.04f,.18f,.96f,.84f,4);  // open actual searchable guide, not a hardcoded temple
                 link(.1f,.1f,.98f,.18f,18);
                 break;
             case 5:
@@ -188,6 +211,33 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void quickMenu() {
+        final String[] pageLabels = {
+            "01 — Welcome", "02 — Onboarding", "03 — Home", "04 — Pagoda Guide",
+            "05 — Bupaya Detail", "06 — Google Maps", "07 — Offline 3D",
+            "08 — AR Preview", "09 — History Timeline", "10 — Travel Planner",
+            "11 — AR Setup", "12 — 3D Information", "13 — Offline Library",
+            "14 — Audio Guide", "15 — Nearby Places", "16 — Favorites",
+            "17 — Settings", "18 — Search", "19 — Visitor Safety", "20 — About"
+        };
+        final String[] entries = new String[21];
+        entries[0] = "▶ ဒီစာမျက်နှာ၏ Function ဖွင့်ရန်";
+        System.arraycopy(pageLabels,0,entries,1,20);
+        new AlertDialog.Builder(this).setTitle("BAGAN • Pages & Features")
+          .setItems(entries,(d,idx)->{
+              if(idx==0){activate(current);return;}
+              int next=idx;
+              open(next,true);
+          })
+          .setNegativeButton("Cancel",(d,w)->{})
+          .show();
+    }
+    private void pressFeedback() {
+        if(real==null) return;
+        android.content.SharedPreferences p = getSharedPreferences("bagan_real_v6",MODE_PRIVATE);
+        if(p.getBoolean("sound",true)) screen.playSoundEffect(SoundEffectConstants.CLICK);
+        if(p.getBoolean("haptic",true)) screen.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+    }
     private void activate(int page){
        if(real!=null&&page>=4) real.run(page);
     }
@@ -195,6 +245,7 @@ public class MainActivity extends Activity {
         private final Paint brush=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         private final RectF bounds=new RectF();
         private float touchX,touchY;
+        private long touchAt;
         ScreenView(){super(MainActivity.this);}
         @Override protected void onDraw(Canvas canvas) {
             canvas.drawColor(0xff21150e);
@@ -210,14 +261,18 @@ public class MainActivity extends Activity {
         @Override public boolean onTouchEvent(MotionEvent ev) {
             switch(ev.getActionMasked()){
                 case MotionEvent.ACTION_DOWN:
-                    touchX=ev.getX();touchY=ev.getY();return true;
+                    touchX=ev.getX();touchY=ev.getY();touchAt=android.os.SystemClock.uptimeMillis();return true;
                 case MotionEvent.ACTION_UP:
                     float dx=ev.getX()-touchX;
                     float dy=ev.getY()-touchY;
+                    long duration=android.os.SystemClock.uptimeMillis()-touchAt;
+                    if(duration>620 && Math.abs(dx)<getResources().getDisplayMetrics().density*18 && Math.abs(dy)<getResources().getDisplayMetrics().density*18){
+                        pressFeedback();quickMenu();performClick();return true;
+                    }
                     if(Math.abs(dx)>getResources().getDisplayMetrics().density*45
                        &&Math.abs(dx)>Math.abs(dy)*1.25f) {
                         int next=current+(dx<0?1:-1);
-                        if(next>=1&&next<=20)open(next,true);
+                        if(next>=1&&next<=20){pressFeedback();open(next,true);}
                         performClick();return true;
                     }
                     float x=(ev.getX()-bounds.left)/Math.max(1,bounds.width());
@@ -226,12 +281,15 @@ public class MainActivity extends Activity {
                         for(int i=hits.size()-1;i>=0;i--){
                             Hit z=hits.get(i);
                             if(z.matches(x,y)){
+                                pressFeedback();
                                 if(z.target==current){activate(current);}
                                 else {open(z.target,true);if(z.target>=4)activate(z.target);}
-                                break;
+                                performClick();return true;
                             }
                         }
                     }
+                    // On content-centric pages, tapping the image opens its real feature.
+                    if(current>=4 && y>.14f && y<.91f){pressFeedback();activate(current);}
                     performClick();return true;
                 default:return true;
             }
