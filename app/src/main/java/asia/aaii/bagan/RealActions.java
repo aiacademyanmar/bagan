@@ -73,10 +73,12 @@ public final class RealActions {
   }
   public void info(int i){
     JSONObject p=pagoda(i);if(p==null)return;
+    memory.edit().putString("last_place",p.optString("id")).apply();
     LinearLayout l=body();label(l,name(p));
     label(l,description(p));label(l,"ခေတ် / Period: "+p.optString("period","မသေချာသေး"));
     label(l,"GPS / Place ID: "+(p.optBoolean("gpsVerified")?"Verified":"မစစ်ဆေးရသေး (Map name-search)"));
     button(l,"🗺 Google Maps / Directions",()->maps(p.optString("mapQuery",p.optString("en")+" Bagan"),true));
+    button(l,"↗ Share Place / နေရာမျှဝေရန်",()->sharePlace(p));
     button(l,saved(p)?"★ Favorite ဖယ်ရန်":"☆ Favorite သိမ်းရန်",()->toggle(p));
     button(l,"🔊 သမိုင်းကို အသံဖတ်မည်",()->speak(p.optString("mm")+". "+description(p)));
     if(p.optBoolean("has3d")||p.optString("id").equals("bupaya"))
@@ -167,12 +169,25 @@ public final class RealActions {
     Switch haptic=new Switch(context);haptic.setText("Haptic feedback");haptic.setChecked(memory.getBoolean("haptic",true));
     haptic.setOnCheckedChangeListener((v,x)->memory.edit().putBoolean("haptic",x).apply());l.addView(haptic);
     label(l,"Visual Artwork: မူရင်း ၂၀ PNG ကို မပြင်ထားပါ။ Language/Theme ပြောင်းလဲမှုသည် ရှိပြီးသား PNG စာသားကို မပြောင်းနိုင်ပါ။");
+    button(l,"Recently Viewed Temple / နောက်ဆုံးကြည့်ခဲ့သောဘုရား",()->recent());
+    button(l,"Clear Favorites / အကြိုက်ဆုံးစာရင်းရှင်းရန်",()->{
+      new AlertDialog.Builder(context).setTitle("Clear saved Favorites?")
+        .setMessage("သိမ်းထားသော Favorites အားလုံးဖယ်ရှားမည်။")
+        .setNegativeButton("Cancel",(d,w)->{})
+        .setPositiveButton("Clear",(d,w)->{
+          SharedPreferences.Editor e=memory.edit();
+          for(int i=0;i<places.length();i++){JSONObject p=pagoda(i);if(p!=null)e.remove("fav_"+p.optString("id"));}
+          e.apply();
+          Toast.makeText(context,"Favorites cleared",Toast.LENGTH_SHORT).show();
+        }).show();
+    });
     dialog("Settings",l);
   }
   public void offline(){
     LinearLayout l=body();
     label(l,"✓ Full HD UI/UX Screens 20\n✓ Pagoda guide 30 places\n✓ History & 1–3 day routes\n✓ Bupaya GLB Model\n✓ Offline WebGL 3D Viewer\n✓ Favorites / Settings");
     label(l,"Online needed: Google Maps Search / Directions. ARCore spatial tracking not implemented.");
+    label(l,"Favorites saved: "+countFav()+" • Most recent temple: "+memory.getString("last_place","none"));
     button(l,"Bupaya Offline 3D ဖွင့်မည်",()->model());
     dialog("Offline Library",l);
   }
@@ -198,6 +213,7 @@ public final class RealActions {
   public void help(){
     LinearLayout l=body();label(l,"Bagan Heritage Real-Systems Edition\n20 Original Full HD Visual Pages + Functional Dialogs");
     button(l,"Offline Library",()->offline());button(l,"Settings",()->settings());
+    button(l,"Recently Viewed Place",()->recent());
     button(l,"UNESCO Bagan",()->openUrl("https://whc.unesco.org/en/list/1588/"));
     dialog("Help & About",l);
   }
@@ -206,6 +222,29 @@ public final class RealActions {
     button(l,"Ananda Temple",()->maps("Ananda Temple Bagan Myanmar",true));
     button(l,"Shwezigon Pagoda",()->maps("Shwezigon Pagoda Nyaung U Myanmar",true));
     button(l,"Choose from 30 places",()->guide(""));dialog("Google Maps • Online Directions",l);
+  }
+  private void sharePlace(JSONObject p) {
+    String title=name(p);
+    String query=p.optString("mapQuery",p.optString("en")+" Bagan Myanmar");
+    String url="https://www.google.com/maps/search/?api=1&query="+Uri.encode(query);
+    Intent send=new Intent(Intent.ACTION_SEND);
+    send.setType("text/plain");
+    send.putExtra(Intent.EXTRA_TEXT,title+"\n"+description(p)+"\n"+url);
+    try {context.startActivity(Intent.createChooser(send,"Bagan Heritage • Share Place"));}
+    catch(Exception e){Toast.makeText(context,"Sharing unavailable",Toast.LENGTH_SHORT).show();}
+  }
+  public void recent(){
+    String id=memory.getString("last_place","");
+    if(id.isEmpty()){Toast.makeText(context,"မကြာသေးမီက ကြည့်ထားသော ဘုရား မရှိသေးပါ",Toast.LENGTH_SHORT).show();return;}
+    for(int i=0;i<places.length();i++){
+      JSONObject p=pagoda(i);
+      if(p!=null&&id.equals(p.optString("id"))){info(i);return;}
+    }
+  }
+  private int countFav(){
+    int total=0;
+    for(int i=0;i<places.length();i++){JSONObject p=pagoda(i);if(p!=null&&saved(p))total++;}
+    return total;
   }
   private void openUrl(String uri){try{context.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(uri)));}catch(Exception e){}}
   public void run(int page){
@@ -218,5 +257,6 @@ public final class RealActions {
       case 20:help();break;
     }
   }
+  public void pause(){if(tts!=null)tts.stop();}
   public void close(){if(tts!=null){tts.stop();tts.shutdown();tts=null;}}
 }
