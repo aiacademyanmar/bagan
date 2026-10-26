@@ -1,0 +1,1 @@
+<resources><style name="Theme.BaganMuseum" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:statusBarColor">#130E0C</item><item name="android:navigationBarColor">#130E0C</item></style></resources>
