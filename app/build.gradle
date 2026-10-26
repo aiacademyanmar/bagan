@@ -6,8 +6,8 @@ android {
         applicationId 'asia.aaii.bagan'
         minSdk 26
         targetSdk 28
-        versionCode 71
-        versionName '7.1.0'
+        versionCode 80
+        versionName '8.0.0'
     }
     buildTypes { release { minifyEnabled false } }
     compileOptions {
