@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
     private int current = 1;
     private Bitmap image;
     private ScreenView screen;
+    private RealActions real;
 
     private static class Hit {
         final float x1,y1,x2,y2; final int target;
@@ -52,6 +53,7 @@ public class MainActivity extends Activity {
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
             View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        real=new RealActions(this);
         screen = new ScreenView();
         setContentView(screen);
         int start=saved==null?1:saved.getInt("page",1);
@@ -62,6 +64,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if(image!=null){image.recycle();image=null;}
+        if(real!=null)real.close();
         super.onDestroy();
     }
     @Override public void onBackPressed() {
@@ -185,6 +188,9 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void activate(int page){
+       if(real!=null&&page>=4) real.run(page);
+    }
     private class ScreenView extends View {
         private final Paint brush=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         private final RectF bounds=new RectF();
@@ -220,7 +226,9 @@ public class MainActivity extends Activity {
                         for(int i=hits.size()-1;i>=0;i--){
                             Hit z=hits.get(i);
                             if(z.matches(x,y)){
-                                open(z.target,true);break;
+                                if(z.target==current){activate(current);}
+                                else {open(z.target,true);if(z.target>=4)activate(z.target);}
+                                break;
                             }
                         }
                     }
