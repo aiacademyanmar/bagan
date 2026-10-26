@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
         real=new RealActions(this);
         screen = new ScreenView();
         setContentView(screen);
-        int start=saved==null?1:saved.getInt("page",1);
+        int start=saved==null?getSharedPreferences("bagan_ui_v62",MODE_PRIVATE).getInt("last_page",1):saved.getInt("page",1);
         open(start,false);
     }
     @Override protected void onSaveInstanceState(Bundle b) {
@@ -78,6 +78,10 @@ public class MainActivity extends Activity {
         if(real!=null)real.close();
         super.onDestroy();
     }
+    @Override protected void onPause() {
+        if(real!=null)real.pause();
+        super.onPause();
+    }
     @Override public void onBackPressed() {
         if(!visited.isEmpty())open(visited.pop(),false);
         else if(current!=3)open(3,false);
@@ -87,6 +91,7 @@ public class MainActivity extends Activity {
         if(page<1||page>20||page==current&&image!=null)return;
         if(remember&&current!=page)visited.push(current);
         current=page;
+        getSharedPreferences("bagan_ui_v62",MODE_PRIVATE).edit().putInt("last_page",page).apply();
         image=bitmapCache.get(page);
         if(image==null || image.isRecycled()){
             BitmapFactory.Options opt=new BitmapFactory.Options();
