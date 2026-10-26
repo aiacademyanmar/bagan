@@ -25,7 +25,7 @@ private val panel=Color(0xFF302018)
 @Composable
 fun ThreeDMuseumScreen() {
     Text("Explore 3D Bagan Museum",fontSize=22.sp,color=porcelain,fontWeight=FontWeight.Bold)
-    Text("Offline GLB concept model • Exterior & interior views",color=fog,fontSize=12.sp)
+    Text("Offline GLB concept model • Concept walkthrough + exhibit hotspots",color=fog,fontSize=12.sp)
     Spacer(Modifier.height(14.dp))
     AndroidView(
         factory={context ->
@@ -44,18 +44,21 @@ fun ThreeDMuseumScreen() {
         modifier=Modifier.fillMaxWidth().height(420.dp)
     )
     Spacer(Modifier.height(12.dp))
-    Text("Drag to rotate • Pinch to zoom • Tap Inside/Exterior to switch",color=porcelain,fontSize=12.sp)
+    Text("Drag to rotate • Pinch to zoom • Walk / Hotspots to explore",color=porcelain,fontSize=12.sp)
     Text("This is an illustrative newly-created museum concept, not a photogrammetric reconstruction of an ancient Bagan monument.",color=fog,fontSize=12.sp)
     Spacer(Modifier.height(18.dp))
     Text("AR Museum Placement",color=sand,fontWeight=FontWeight.Bold)
-    Text("Real ARCore world-tracked placement is not enabled in this release. A compatible phone, camera permissions and tracking integration will be needed for a future version.",color=fog,fontSize=12.sp)
+    Text("Optional ARCore placement is available in the AR tab on supported phones. This 3D viewer works offline without ARCore.",color=fog,fontSize=12.sp)
 }
 private val narrations= listOf(
     Triple("Introduction / မိတ်ဆက်","ပုဂံဟာ မြန်မာ့ သမိုင်းဝင် ဘုရားပုထိုးများနဲ့ ယဉ်ကျေးမှုအမွေအနှစ်များကြောင့် ထင်ရှားတဲ့ ဒေသတစ်ခု ဖြစ်ပါတယ်။","Bagan is celebrated for its ancient monuments and Myanmar cultural heritage."),
     Triple("Architecture / ဗိသုကာ","ပုဂံဗိသုကာမှာ အုတ်စီပညာ၊ မုခ်ခုံးနဲ့ ဘုရားပုထိုး အဆောက်အအုံ အနုပညာတွေကို တွေ့နိုင်ပါတယ်။","Bagan architecture is notable for its brick structures, arches and temples."),
     Triple("Murals / နံရံဆေးရေး","ပုဂံခေတ် နံရံဆေးရေးပန်းချီတွေက အနုပညာနဲ့ ဘာသာရေး ယဉ်ကျေးမှုကို ရောင်ပြန်ဟပ်ပါတယ်။","Ancient Bagan murals offer a glimpse into art, religion and historical life."),
     Triple("Inscriptions / ကျောက်စာ","ကျောက်စာတွေဟာ ပုဂံခေတ် စာပေ၊ လူမှုရေးနဲ့ အလှူဒါန မှတ်တမ်းတွေကို သိရှိစေပါတယ်။","Historical inscriptions are valuable records of language, society and donations."),
-    Triple("Conservation / ထိန်းသိမ်းရေး","ပုဂံအမွေအနှစ်တွေကို အနာဂတ် မျိုးဆက်တွေအတွက် စနစ်တကျ ထိန်းသိမ်းဖို့ လိုအပ်ပါတယ်။","Conservation helps protect Bagan's heritage for future generations.")
+    Triple("Conservation / ထိန်းသိမ်းရေး","ပုဂံအမွေအနှစ်တွေကို အနာဂတ် မျိုးဆက်တွေအတွက် စနစ်တကျ ထိန်းသိမ်းဖို့ လိုအပ်ပါတယ်။","Conservation helps protect Bagan's heritage for future generations."),
+    Triple("Temple Studies / ဘုရားပုထိုး","ပုဂံမြို့ဟောင်းမှာ ထင်ရှားသော ဘုရားပုထိုးများနှင့် ခေတ်အဆက်ဆက် ဗိသုကာပညာတို့ကို လေ့လာနိုင်ပါတယ်။","The temples of Bagan showcase centuries of architecture and craftsmanship."),
+    Triple("Archaeology / ရှေးဟောင်းသုတေသန","မြေပြင်သုတေသနနှင့် မှတ်တမ်းတင်ခြင်းတို့က ရှေးဟောင်းအမွေအနှစ်တွေကို နားလည်အောင် ကူညီပါတယ်။","Archaeological research and documentation help us understand cultural heritage."),
+    Triple("Museum Tour / ပြတိုက်လှည့်လည်ခြင်း","ဤဒစ်ဂျစ်တယ်ပြတိုက်မှာ ပြခန်းအယူအဆများ၊ အနုပညာလက်ရာများနှင့် သမိုင်းဇာတ်ကြောင်းများကို စူးစမ်းနိုင်ပါတယ်။","Explore the museum concept galleries and their historical themes.")
 )
 @Composable
 fun NativeGuideScreen() {

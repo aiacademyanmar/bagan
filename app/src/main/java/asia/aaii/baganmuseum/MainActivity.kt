@@ -60,6 +60,7 @@ private fun Museum() {
     var index by rememberSaveable { mutableIntStateOf(0) }
     var tour by rememberSaveable { mutableIntStateOf(store.getInt("tour",0)) }
     var search by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf("All") }
     var favs by remember { mutableStateOf(store.getStringSet("favs",emptySet())?.toSet() ?: emptySet<String>()) }
     var first by rememberSaveable { mutableStateOf(!store.getBoolean("entered",false)) }
     BackHandler(!first && page!="Home") { page="Home" }
@@ -78,7 +79,7 @@ private fun Museum() {
         Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("BAGAN MUSEUM",color=gold,fontWeight=FontWeight.Black,fontSize=21.sp)
-                Text("Digital Heritage Experience • V1.2",color=grey,fontSize=11.sp)
+                Text("Digital Heritage Experience • V1.3",color=grey,fontSize=11.sp)
             }
             TextButton(onClick={page="Settings"}) { Text("⚙") }
         }
@@ -95,14 +96,20 @@ private fun Museum() {
                     OutlinedButton(onClick={page="History"},modifier=Modifier.fillMaxWidth()) {Text("Bagan History Timeline")}
                     OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Explore Interactive 3D Museum")}
                     OutlinedButton(onClick={page="Audio"},modifier=Modifier.fillMaxWidth()) {Text("မြန်မာ / English Audio Guide")}
+                    Button(onClick={page="AR"},modifier=Modifier.fillMaxWidth()) {Text("AR Camera • Place Miniature Temple")}
                     Title("Featured Exhibitions")
                     samples.take(3).forEachIndexed { i,_ -> ExhibitRow(i){index=i;page="Detail"} }
                 }
                 "Gallery" -> {
                     Title("Museum Galleries")
                     OutlinedTextField(value=search,onValueChange={search=it},label={Text("Search Exhibits")},modifier=Modifier.fillMaxWidth(),singleLine=true)
+                    Row(horizontalArrangement=Arrangement.spacedBy(5.dp)) {
+                        listOf("All","Art","History","Culture").forEach { c ->
+                            FilterChip(selected=category==c,onClick={category=c},label={Text(c,fontSize=11.sp)})
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
-                    samples.indices.filter { samples[it].title.contains(search,true)||samples[it].category.contains(search,true) }.forEach { i ->
+                    samples.indices.filter { (category=="All" || samples[it].category==category) && (samples[it].title.contains(search,true)||samples[it].category.contains(search,true)) }.forEach { i ->
                         ExhibitRow(i){index=i;page="Detail"}
                     }
                     Note()
@@ -123,6 +130,16 @@ private fun Museum() {
                     Text("※ အထက်ပါ Layout သည် Concept Design ဖြစ်ပြီး တကယ့်ပြတိုက်၏ Floor Plan မဟုတ်ပါ။",color=grey,fontSize=12.sp)
                 }
                 "3D" -> { ThreeDMuseumScreen() }
+                "AR" -> {
+                    Title("Native AR Camera Placement")
+                    Text("ARCore plane tracking: find a floor and tap to place a Bagan-inspired 3D monument.",color=grey)
+                    Spacer(Modifier.height(12.dp))
+                    Button(onClick={context.startActivity(android.content.Intent(context,ArMuseumActivity::class.java))},modifier=Modifier.fillMaxWidth()) {Text("📷 Launch Native AR Camera")}
+                    Spacer(Modifier.height(12.dp))
+                    Text("An ARCore-compatible phone and Google Play Services for AR are required. The miniature is a procedural monument, not the full museum GLB.",color=grey)
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Open Offline 3D Museum Instead")}
+                }
                 "Audio" -> { NativeGuideScreen() }
                 "History" -> {
                     Title("Bagan History Timeline")
@@ -176,16 +193,18 @@ private fun Museum() {
                         favs=if(id in favs) favs-id else favs+id
                         store.edit().putStringSet("favs",favs).apply()
                     }) { Text(if(index.toString() in favs) "♥ Remove Favorite" else "♡ Add Favorite") }
+                    OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Explore Museum 3D Concept / Hotspots")}
+                    OutlinedButton(onClick={page="Audio"},modifier=Modifier.fillMaxWidth()) {Text("Hear Related Audio Guide")}
                     Note()
                 }
                 "Settings" -> {
                     Title("Settings")
-                    Text("Bagan Museum Native V1.2",color=cream)
+                    Text("Bagan Museum Native V1.3",color=cream)
                     Text("Offline-first educational demo",color=grey)
                     Spacer(Modifier.height(18.dp))
                     OutlinedButton(onClick={store.edit().remove("entered").apply();first=true}) {Text("Show Welcome Screen")}
                     Title("Future Updates")
-                    Text("3D and Audio Guide are in V1.2. AR world tracking and GPS Maps need a future update.",color=grey)
+                    Text("3D and Audio Guide are in V1.3. AR world tracking and GPS Maps need a future update.",color=grey)
                     Note()
                 }
             }
@@ -193,7 +212,7 @@ private fun Museum() {
         }
         HorizontalDivider(color=earth)
         Row(Modifier.fillMaxWidth().padding(4.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            listOf("Home" to "⌂","Gallery" to "▦","3D" to "◈","Audio" to "♫","Favorites" to "♥").forEach { (item,icon) ->
+            listOf("Home" to "⌂","Gallery" to "▦","3D" to "◈","AR" to "◉","Audio" to "♫").forEach { (item,icon) ->
                 TextButton(onClick={page=item},contentPadding=PaddingValues(horizontal=3.dp,vertical=2.dp)) {
                     Column(horizontalAlignment=Alignment.CenterHorizontally) {
                         Text(icon,color=if(page==item) gold else grey,fontSize=19.sp)

@@ -83,5 +83,42 @@ canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-las
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoomBy(e.deltaY*.025)},{passive:false});
 canvas.addEventListener('touchmove',e=>{if(e.touches.length===2){e.preventDefault();const a=e.touches[0],b=e.touches[1],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(pinch)zoomBy((pinch-d)*.04);pinch=d;}},{passive:false});
 canvas.addEventListener('touchend',()=>pinch=0);
+
+/* V1.3 concept walk and curated exhibit-focus hotspots: not archaeological mapping. */
+const highlights=[
+ {name:"Grand Museum Entrance",note:"Explore the concept red-brick gateway and its heritage-inspired facade.",pos:[0,4,7.55],yaw:.25,d:13},
+ {name:"Central Pagoda Spire",note:"An original design inspired by Bagan-era temple rooflines, not a measured replica.",pos:[0,9,-1.5],yaw:.65,d:13},
+ {name:"Gallery Columns",note:"Interior cutaway shows a speculative arrangement of museum display columns.",pos:[-2,2,2],yaw:.25,d:10,interior:true},
+ {name:"Heritage Courtyard",note:"Courtyard and approach were created for this virtual museum concept.",pos:[0,0,11],yaw:.5,d:16},
+ {name:"Decorative Brickwork",note:"Brick and sandstone color zones illustrate material themes.",pos:[6,3,1],yaw:1,d:12}
+];
+let focusIndex=-1,walk=false;
+function focusNext(){
+ walk=false;focusIndex=(focusIndex+1)%highlights.length;
+ const h=highlights[focusIndex];
+ inside=!!h.interior;target=h.pos.slice();yaw=h.yaw;pitch=.13;distance=h.d;
+ info.textContent='HOTSPOT '+(focusIndex+1)+'/'+highlights.length+' • '+h.name+' — '+h.note;
+}
+function walkthrough(){
+ walk=true;inside=true;target=[0,2,3.5];yaw=0;pitch=.04;distance=1.9;
+ info.textContent='CONCEPT WALK • Tap Forward/Back; drag to look around. Concept cutaway, not surveyed museum.';
+}
+function stepWalk(dir){
+ if(!walk)walkthrough();
+ target[0]+=Math.sin(yaw)*dir*1.1;
+ target[2]+=Math.cos(yaw)*dir*1.1;
+ target[0]=Math.max(-6,Math.min(6,target[0]));
+ target[2]=Math.max(-5,Math.min(6,target[2]));
+ info.textContent='Walkthrough • Approx position '+target[0].toFixed(1)+', '+target[2].toFixed(1)+' • Drag to look';
+}
+function addAction(label,handler){
+ const b=document.createElement('button');b.textContent=label;
+ b.addEventListener('click',handler);document.getElementById('hud').appendChild(b);
+}
+addAction('🚶 Walk',walkthrough);
+addAction('↑ Forward',()=>stepWalk(-1));
+addAction('↓ Back',()=>stepWalk(1));
+addAction('📍 Hotspot',focusNext);
+
 requestAnimationFrame(render);
 </script></body></html>
