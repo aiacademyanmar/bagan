@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,7 +78,7 @@ private fun Museum() {
         Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("BAGAN MUSEUM",color=gold,fontWeight=FontWeight.Black,fontSize=21.sp)
-                Text("Digital Heritage Experience • V1.1",color=grey,fontSize=11.sp)
+                Text("Digital Heritage Experience • V1.2",color=grey,fontSize=11.sp)
             }
             TextButton(onClick={page="Settings"}) { Text("⚙") }
         }
@@ -90,6 +93,8 @@ private fun Museum() {
                     Button(onClick={page="Gallery"},modifier=Modifier.fillMaxWidth()) {Text("Explore Galleries")}
                     OutlinedButton(onClick={page="Floor Plan"},modifier=Modifier.fillMaxWidth()) {Text("Interactive Museum Floor Plan")}
                     OutlinedButton(onClick={page="History"},modifier=Modifier.fillMaxWidth()) {Text("Bagan History Timeline")}
+                    OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Explore Interactive 3D Museum")}
+                    OutlinedButton(onClick={page="Audio"},modifier=Modifier.fillMaxWidth()) {Text("မြန်မာ / English Audio Guide")}
                     Title("Featured Exhibitions")
                     samples.take(3).forEachIndexed { i,_ -> ExhibitRow(i){index=i;page="Detail"} }
                 }
@@ -117,6 +122,8 @@ private fun Museum() {
                     }
                     Text("※ အထက်ပါ Layout သည် Concept Design ဖြစ်ပြီး တကယ့်ပြတိုက်၏ Floor Plan မဟုတ်ပါ။",color=grey,fontSize=12.sp)
                 }
+                "3D" -> { ThreeDMuseumScreen() }
+                "Audio" -> { NativeGuideScreen() }
                 "History" -> {
                     Title("Bagan History Timeline")
                     listOf(
@@ -173,12 +180,12 @@ private fun Museum() {
                 }
                 "Settings" -> {
                     Title("Settings")
-                    Text("Bagan Museum Native V1.1",color=cream)
+                    Text("Bagan Museum Native V1.2",color=cream)
                     Text("Offline-first educational demo",color=grey)
                     Spacer(Modifier.height(18.dp))
                     OutlinedButton(onClick={store.edit().remove("entered").apply();first=true}) {Text("Show Welcome Screen")}
                     Title("Future Updates")
-                    Text("3D / AR, GPS Maps and Audio Guide are not yet included.",color=grey)
+                    Text("3D and Audio Guide are in V1.2. AR world tracking and GPS Maps need a future update.",color=grey)
                     Note()
                 }
             }
@@ -186,7 +193,7 @@ private fun Museum() {
         }
         HorizontalDivider(color=earth)
         Row(Modifier.fillMaxWidth().padding(4.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            listOf("Home" to "⌂","Gallery" to "▦","Floor Plan" to "▤","Tour" to "➤","Favorites" to "♥").forEach { (item,icon) ->
+            listOf("Home" to "⌂","Gallery" to "▦","3D" to "◈","Audio" to "♫","Favorites" to "♥").forEach { (item,icon) ->
                 TextButton(onClick={page=item},contentPadding=PaddingValues(horizontal=3.dp,vertical=2.dp)) {
                     Column(horizontalAlignment=Alignment.CenterHorizontally) {
                         Text(icon,color=if(page==item) gold else grey,fontSize=19.sp)
@@ -198,12 +205,24 @@ private fun Museum() {
     }
 }
 @Composable private fun Banner() {
-    Column(Modifier.fillMaxWidth().height(170.dp).background(
-        Brush.linearGradient(listOf(Color(0xFFAA6841),Color(0xFF59301B))),RoundedCornerShape(18.dp)
-    ).padding(20.dp),verticalArrangement=Arrangement.Bottom) {
-        Text("✧ BAGAN ✧",color=cream,fontSize=30.sp,fontWeight=FontWeight.Black)
-        Text("Museum of Myanmar Heritage",color=cream)
-        Text("Architecture • Art • History • Culture",color=grey,fontSize=11.sp)
+    Box(
+        Modifier.fillMaxWidth().height(208.dp),
+        contentAlignment=Alignment.BottomStart
+    ) {
+        Image(
+            painter=painterResource(id=R.drawable.museum_hero),
+            contentDescription="Bagan Museum architectural illustration",
+            contentScale=ContentScale.Crop,
+            modifier=Modifier.fillMaxSize()
+        )
+        Box(Modifier.fillMaxSize().background(
+            Brush.verticalGradient(listOf(Color.Transparent, Color(0x9E130E0C)))
+        ))
+        Column(Modifier.padding(17.dp)) {
+            Text("✧ BAGAN MUSEUM ✧",color=cream,fontSize=25.sp,fontWeight=FontWeight.Black)
+            Text("A journey through Myanmar heritage",color=cream)
+            Text("ART • HISTORY • INTERACTIVE 3D",color=gold,fontSize=10.sp)
+        }
     }
 }
 @Composable private fun Title(s:String) {

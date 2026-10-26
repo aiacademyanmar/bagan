@@ -1,8 +1,19 @@
-# Bagan Museum Native APK v1.1
-Isolated build branch of aiacademyanmar/bagan. The **main branch remains unchanged**.
+# Bagan Museum — Native Android V1.2
+Branch: `bagan-museum-native-v1-2` (keeps `main` and V1.1 unchanged).
 
-Kotlin + Jetpack Compose offline-first demo. Includes a welcome screen, a Bagan Museum homepage, eight sample exhibit collections, searching, detail cards, a concept floor plan, locally saved favorites, history timeline, guided 5-stop tour and local progress saving.
+## Features
+- Offline-friendly native Kotlin / Jetpack Compose UI; illustrated museum building hero and icon.
+- Galleries, favorites, history, floor plan, five-stop guided tour inherited from V1.1.
+- GLB 2.0 concept model generated at build time (tools/generate_glb.py), embedded into the offline WebGL renderer.
+- Exterior orbit (drag), zoom / pinch, and interior cutaway camera mode.
+- Native Android TextToSpeech guide in English and Burmese (Burmese voice availability depends on device).
 
-To build: GitHub Actions > Build Bagan Museum Native APK > Run workflow on branch bagan-museum-native-v1-1. On success, download artifact Bagan-Museum-Native-V1.1-debug.
+## Limitations
+Museum map and exhibits are illustrative, not a verified physical museum floor plan or collections.
+No actual ARCore world-tracking in this release, nor real-world navigation.
+This is a concept GLB model, not a reconstruction of an existing temple or a surveyed museum.
 
-Educational examples only. No real-world 3D, AR, maps, certified museum inventory or wayfinding.
+## Build
+Open GitHub Actions > Build Bagan Museum Native APK V1.2; use the build on this branch.
+Successful artifact includes `app-debug.apk` and `bagan_museum_concept.glb`.
+Works with Android API 26+ when suitable WebGL and TTS support are present.
