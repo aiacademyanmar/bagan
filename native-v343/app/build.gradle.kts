@@ -10,8 +10,8 @@ android {
     applicationId = "asia.aaii.bagan.museum"
     minSdk = 26
     targetSdk = 35
-    versionCode = 344
-    versionName = "3.4.4"
+    versionCode = 345
+    versionName = "3.4.5"
   }
   buildTypes { getByName("release") { isMinifyEnabled = false } }
   compileOptions {
@@ -28,4 +28,5 @@ dependencies {
   implementation("androidx.compose.foundation:foundation")
   implementation("androidx.compose.material3:material3")
   implementation("io.github.sceneview:sceneview:4.34.0")
+  implementation("io.github.sceneview:arsceneview:4.34.0")
 }
