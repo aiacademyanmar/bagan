@@ -261,12 +261,12 @@ fun MuseumUiV17(){
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
                         "Heritage 3D" -> V17DarkPanel { HeritageOffline3DV16(chosen) }
                         "3D Viewer" -> V17DarkPanel { HeritageOffline3DV16(chosen) }
-                        "AR View" -> V17AR(go)
+                        "AR View" -> V17AR { destination->go(destination) }
                         "Indoor Tour" -> V17DarkPanel{
                             MuseumIndoorNavigatorV14(onExplore3d={go("Heritage 3D")},
                                 onArtifact={go("Collections")})
                         }
-                        "Museum Map" -> V17Map(go)
+                        "Museum Map" -> V17Map { destination->go(destination) }
                         "Collections" -> V17Collections {i->artifactIndex=i;go("Artifact Detail")}
                         "Artifact Detail" -> V17Artifact(artifactIndex,{destination->go(destination)})
                         "History Timeline" -> V17History()
@@ -290,8 +290,8 @@ fun MuseumUiV17(){
                         "Profile" -> V17Profile(visitor,{visitor=it;prefs.edit().putString("visitor",it).apply()},
                             favorites.size,prefs.getInt("best",0),{destination->go(destination)})
                         "Certificate" -> V17Certificate(visitor,prefs.getInt("best",0),{destination->go(destination)})
-                        "Menu" -> V17Menu(go)
-                        "Offline Learning" -> V17Offline(go)
+                        "Menu" -> V17Menu { destination->go(destination) }
+                        "Offline Learning" -> V17Offline { destination->go(destination) }
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
