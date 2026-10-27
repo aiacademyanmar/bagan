@@ -44,14 +44,16 @@ class MainActivity:ComponentActivity(){
   catch(e:Exception){android.widget.Toast.makeText(this,"Map app unavailable",1).show()}
  }
  private fun launchAr(t:Temple){
-  val uri=Uri.parse("https://arvr.google.com/scene-viewer/1.0").buildUpon()
-    .appendQueryParameter("file",t.url).appendQueryParameter("mode","ar_preferred").build()
-  try{
-   startActivity(Intent(Intent.ACTION_VIEW,uri).setPackage("com.google.android.googlequicksearchbox").addCategory(Intent.CATEGORY_BROWSABLE))
+  val file=ModelRepository.cached(this,t)
+  if(!file.exists()) {
+    android.widget.Toast.makeText(this,"AR အတွက် မူရင်း GLB ကို Download အရင်လုပ်ပါ",android.widget.Toast.LENGTH_LONG).show()
+    return
+  }
+  try {
+    ModelRepository.validate(file)
+    startActivity(Intent(this,NativeARActivity::class.java).putExtra("file_uri",Uri.fromFile(file).toString()).putExtra("model_name",t.nameMm))
   }catch(e:Exception){
-   AlertDialog.Builder(this).setTitle("AR မရနိုင်သေးပါ")
-    .setMessage("Google App / Google Play Services for AR ကို စစ်ဆေးပါ။ 3D Viewer ကို App ထဲတွင် ဆက်ကြည့်နိုင်ပါတယ်။")
-    .setPositiveButton("OK",null).show()
+    AlertDialog.Builder(this).setTitle("AR Model Error").setMessage(e.localizedMessage?:"GLB ဖိုင်ကို မဖတ်နိုင်ပါ").setPositiveButton("OK",null).show()
   }
  }
 }
@@ -69,7 +71,14 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
   Row(Modifier.fillMaxWidth().background(panel).padding(14.dp),verticalAlignment=Alignment.CenterVertically){
    Text("🏛",fontSize=26.sp); Spacer(Modifier.width(9.dp))
    Column{Text("BAGAN HERITAGE MUSEUM",color=gold,fontWeight=FontWeight.Bold,fontSize=18.sp)
-     Text("History • Guide • Map • 3D • AR | V3.4.4",fontSize=11.sp,color=Color.White)}
+     Text("History • Guide • Map • 3D • AR | V3.4.5",fontSize=11.sp,color=Color.White)}
+  }
+  Row(Modifier.fillMaxWidth().background(panel).horizontalScroll(rememberScrollState()).padding(horizontal=6.dp,vertical=4.dp),
+    horizontalArrangement=Arrangement.spacedBy(4.dp)){
+   listOf("home" to "🏠 Home","guide" to "🏛 Guide/3D","maps" to "🗺 Map","saved" to "★ Saved","more" to "☰ More").forEach{(id,name)->
+    val active=page==id||(page=="viewer"&&id=="guide")
+    TextButton(onClick={page=id;current=null}){Text(name,color=if(active)gold else Color.White,fontSize=12.sp)}
+   }
   }
   if(page=="viewer" && current!=null){
    ModelPage(current!!,{page="guide"},ar)
@@ -114,11 +123,6 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
      }
     }
    }
-   Row(Modifier.fillMaxWidth().background(panel),horizontalArrangement=Arrangement.SpaceEvenly){
-    listOf("home" to "Home","guide" to "Guide/3D","maps" to "Map","saved" to "Saved","more" to "More").forEach{(id,name)->
-      TextButton(onClick={page=id;current=null}){Text(name,color=if(page==id)gold else Color.White,fontSize=11.sp)}
-    }
-   }
   }
  }
 }
@@ -149,18 +153,24 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
  var rendererReady by remember(t.id){mutableStateOf(false)}
  var slow by remember(t.id){mutableStateOf(false)}
  var arHelp by remember{mutableStateOf(false)}
- LaunchedEffect(t.id,retry){
+ var demoNow by remember(t.id){mutableIntStateOf(0)}
+ LaunchedEffect(t.id,retry,demoNow){
   link=null;failure=null;loading=true;progress=0;demo=false;rendererReady=false;slow=false
   try {
+   if(demoNow>0) {
+    withContext(Dispatchers.IO){ModelRepository.demo(context)}
+    demo=true;link="models/demo_pagoda.glb"
+   } else {
    val f=withContext(Dispatchers.IO){
     ModelRepository.download(context,t){p->(context as? android.app.Activity)?.runOnUiThread{progress=p}}
    }
    link=Uri.fromFile(f).toString()
+   }
   } catch(e:Exception){
    failure=e.message?:"cPanel GLB file unavailable"
    try{
-    val f=withContext(Dispatchers.IO){ModelRepository.demo(context)}
-    demo=true;link=Uri.fromFile(f).toString()
+    withContext(Dispatchers.IO){ModelRepository.demo(context)}
+    demo=true;link="models/demo_pagoda.glb"
    }catch(x:Exception){failure=failure+" | Demo: "+x.message}
   }finally{loading=false}
  }
@@ -172,7 +182,7 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
     key(link){
      SceneView(modifier=Modifier.fillMaxSize()){
       rememberModelInstance(modelLoader,link!!)?.let{instance->
-       ModelNode(modelInstance=instance,scaleToUnits=1.25f,autoAnimate=true)
+       ModelNode(modelInstance=instance,scaleToUnits=1.25f,autoAnimate=true,isEditable=true)
        LaunchedEffect(instance){rendererReady=true}
       }
      }
@@ -185,9 +195,10 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
    else if(link==null) Column(Modifier.align(Alignment.Center),horizontalAlignment=Alignment.CenterHorizontally){
     Text(failure?:"Model unavailable",color=gold);Button(onClick={retry++}){Text("Retry")}
    }
-   else if(!rendererReady)Column(Modifier.align(Alignment.Center),horizontalAlignment=Alignment.CenterHorizontally){
+   else if(!rendererReady)Column(Modifier.align(Alignment.Center).padding(12.dp),horizontalAlignment=Alignment.CenterHorizontally){
     CircularProgressIndicator(color=gold)
-    Text(if(slow)"Renderer ကြာနေပါသည် — Retry နှိပ်ပါ" else "3D Renderer ပြင်ဆင်နေပါသည်",color=gold)
+    Text(if(slow)"Renderer ကြာနေပါသည် — Demo 3D စမ်းပါ" else "3D Renderer ပြင်ဆင်နေပါသည်",color=gold)
+    if(slow)Button(onClick={demoNow++}){Text("Offline Demo 3D")}
    }
    if(demo && !loading)Text("DEMO 3D — မူရင်းဘုရား Model မဟုတ်ပါ",color=gold,
       modifier=Modifier.align(Alignment.BottomCenter).background(panel).padding(6.dp))
@@ -195,6 +206,7 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
   if(failure!=null)Text(failure!!,color=gold,fontSize=11.sp,modifier=Modifier.padding(8.dp))
   Row(Modifier.padding(10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
    OutlinedButton(onClick={retry++},modifier=Modifier.weight(1f)){Text("↻ Retry")}
+   TextButton(onClick={demoNow++}){Text("Demo")}
    Button(onClick={if(demo||loading||link==null)arHelp=true else ar(t)},modifier=Modifier.weight(1f)){Text("AR")}
   }
   Text("Drag: Rotate   •   Pinch: Zoom",color=Color.White,fontSize=11.sp,modifier=Modifier.align(Alignment.CenterHorizontally))
