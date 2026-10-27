@@ -44,6 +44,7 @@ private val samples = listOf(
 class MainActivity:ComponentActivity() {
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
+        V25LocalDiagnostics.install(applicationContext)
         setContent {
             MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=earth,onSurface=cream,onBackground=cream,onPrimary=night)) {
                 MuseumUiV17()

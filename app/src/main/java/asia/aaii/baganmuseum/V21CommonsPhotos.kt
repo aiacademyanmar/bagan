@@ -81,6 +81,22 @@ private fun cacheWrite(ctx:Context,slug:String,photo:CommonsPhoto){
             ?.drop(10)?.forEach{it.delete();File(it.parentFile,it.nameWithoutExtension+".json").delete()}
     }catch(_:Exception){}
 }
+
+/** Download manager uses the same Commons source and disk cache as the gallery.
+ * Only called from an explicit user-initiated action; not a background service.
+ */
+internal suspend fun V25DownloadPhoto(ctx:Context,item:V17Monument):Boolean{
+    if(item.slug=="entrance")return false
+    return withContext(Dispatchers.IO){fetchThumb(item,ctx)!=null}
+}
+internal fun V25PhotoCached(ctx:Context,item:V17Monument):Boolean{
+    if(item.slug=="entrance")return false
+    return try {
+        val (image,meta)=cacheFile(ctx,item.slug)
+        image.isFile && meta.isFile && image.length()>0L
+    }catch(_:Exception){false}
+}
+
 internal fun V23CachedPhotoCount(ctx:Context):Int = try{java.io.File(ctx.cacheDir,"commons_thumb_v22").listFiles()?.count{it.extension=="jpg"}?:0}catch(_:Exception){0}
 internal fun V22ClearPhotoCache(ctx:Context){
     synchronized(commonsPhotoCache){commonsPhotoCache.evictAll()}

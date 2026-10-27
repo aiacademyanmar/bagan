@@ -9,8 +9,8 @@ android {
         applicationId = "asia.aaii.baganmuseum"
         minSdk = 26
         targetSdk = 36
-        versionCode = 15
-        versionName = "2.4.0"
+        versionCode = 16
+        versionName = "2.5.0"
     }
     buildFeatures { compose = true }
     compileOptions {

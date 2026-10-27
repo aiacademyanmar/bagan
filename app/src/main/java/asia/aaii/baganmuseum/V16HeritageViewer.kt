@@ -2,6 +2,8 @@ package asia.aaii.baganmuseum
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,6 +28,10 @@ fun HeritageOffline3DV16(monumentIndex:Int=0){
                 settings.domStorageEnabled=false
                 setBackgroundColor(android.graphics.Color.rgb(23,15,12))
                 webViewClient=object:WebViewClient(){
+                    override fun onReceivedError(view:WebView?,request:WebResourceRequest?,error:WebResourceError?){
+                        super.onReceivedError(view,request,error)
+                        if(request?.isForMainFrame==true) V25LocalDiagnostics.logViewerError(ctx,error?.errorCode?:-1)
+                    }
                     override fun onPageFinished(view:WebView?,url:String?){
                         view?.evaluateJavascript("selectMonument(${monumentIndex.coerceIn(0,9)})",null)
                     }
