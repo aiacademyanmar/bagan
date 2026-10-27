@@ -1,6 +1,11 @@
 name: Bagan Native V3.4.3 APK
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'native-v343/**'
+      - '.github/workflows/build-bagan-native-v343.yml'
 permissions:
   contents: read
 jobs:
@@ -8,9 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Android source was uploaded
-        run: |
-          test -f native-v343/settings.gradle.kts || (echo "Upload the native-v343 source folder from the supplied ZIP first." && exit 1)
+      - name: Verify Native Project
+        run: test -f native-v343/settings.gradle.kts && test -f native-v343/app/src/main/java/asia/aaii/bagan/MainActivity.kt
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -21,9 +25,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
-      - name: Build debug APK
+      - name: Assemble APK
         working-directory: native-v343
-        run: gradle :app:assembleDebug --stacktrace
+        run: gradle --no-daemon :app:assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: Bagan-Native-V3.4.3-debug-APK
