@@ -47,7 +47,7 @@ class MainActivity:ComponentActivity() {
         V25LocalDiagnostics.install(applicationContext)
         setContent {
             MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=earth,onSurface=cream,onBackground=cream,onPrimary=night)) {
-                MuseumUiV17()
+                V26RecoveryGate { MuseumUiV17() }
             }
         }
     }

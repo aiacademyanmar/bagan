@@ -4,6 +4,10 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
+import org.json.JSONObject
+import org.json.JSONArray
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,9 +23,24 @@ fun HeritageOffline3DV16(monumentIndex:Int=0){
     Text("Bagan Heritage 3D • 10 Monuments",color=Color(0xFFFFE8CB),fontSize=21.sp,fontWeight=FontWeight.Bold)
     Text("Offline original concept GLBs • Swipe to rotate / pinch to zoom",color=Color(0xFFC9B7A5),fontSize=12.sp)
     Spacer(Modifier.height(12.dp))
+    val context=LocalContext.current
+    var currentView by remember { mutableStateOf<WebView?>(null) }
+    LaunchedEffect(currentView) {
+        while(true) {
+            delay(3300)
+            val browser=currentView ?: continue
+            browser.evaluateJavascript("window.getBaganViewerStats ? window.getBaganViewerStats() : null") { encoded ->
+                try {
+                    val payload=JSONArray("["+encoded+"]").getString(0)
+                    V26ViewerStatsStore.save(context,JSONObject(payload))
+                }catch(_:Exception){}
+            }
+        }
+    }
     key(Unit){
         AndroidView(factory={ctx ->
             WebView(ctx).apply{
+                currentView=this
                 settings.javaScriptEnabled=true
                 settings.allowFileAccess=true
                 settings.allowContentAccess=false
@@ -40,7 +59,7 @@ fun HeritageOffline3DV16(monumentIndex:Int=0){
             }
         },update={v->v.evaluateJavascript("selectMonument(${monumentIndex.coerceIn(0,9)})",null)},
           modifier=Modifier.fillMaxWidth().height(590.dp),
-          onRelease={v->v.stopLoading();v.loadUrl("about:blank");v.destroy()})
+          onRelease={v->currentView=null;v.stopLoading();v.loadUrl("about:blank");v.destroy()})
     }
     Spacer(Modifier.height(10.dp))
     Text("Concept 3D models are included in the APK. Drive .blend files have not yet been converted; those original files remain in your Drive folders.",color=Color(0xFFC9B7A5),fontSize=12.sp)

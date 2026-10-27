@@ -113,6 +113,11 @@ internal fun V18Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
       V17NeutralButton("Offline Library",Modifier.weight(1f)){go("Offline Multimedia")}
       V17NeutralButton("Audio Progress",Modifier.weight(1f)){go("Audio Dashboard")}
     }
+    Row(horizontalArrangement=Arrangement.spacedBy(5.dp)){
+        V17NeutralButton("3D Stats",Modifier.weight(1f)){go("3D Performance")}
+        V17NeutralButton("ZIP Packs",Modifier.weight(1f)){go("Learning Packages")}
+        V17NeutralButton("Updates",Modifier.weight(1f)){go("Update Center")}
+    }
     V17Section("Heritage Learning","Explore") {go("Offline Learning")}
     Row(Modifier.fillMaxWidth().background(Color(0xFFFAE9CC),RoundedCornerShape(17.dp)).padding(12.dp),
         verticalAlignment=Alignment.CenterVertically){

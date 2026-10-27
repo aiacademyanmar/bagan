@@ -259,9 +259,15 @@ fun MuseumUiV17(){
                         "Monument Detail" -> V18Detail(monuments[chosen],chosen,
                             monuments[chosen].slug in favorites,
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
-                        "Heritage 3D" -> V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
-                        "3D Viewer" -> V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
-                        "AR View" -> V22ARScreen(monuments,chosen,{index->chosen=index},{go("Heritage 3D")})
+                        "Heritage 3D" -> if(V26Recovery.isSafe(ctx))
+                            V26SafeModeNotice{V26Recovery.setSafe(ctx,false);go("Home")}
+                            else V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
+                        "3D Viewer" -> if(V26Recovery.isSafe(ctx))
+                            V26SafeModeNotice{V26Recovery.setSafe(ctx,false);go("Home")}
+                            else V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
+                        "AR View" -> if(V26Recovery.isSafe(ctx))
+                            V26SafeModeNotice{V26Recovery.setSafe(ctx,false);go("Home")}
+                            else V22ARScreen(monuments,chosen,{index->chosen=index},{go("Heritage 3D")})
                         "Indoor Tour" -> V17DarkPanel{
                             MuseumIndoorNavigatorV14(onExplore3d={go("Heritage 3D")},
                                 onArtifact={go("Collections")})
@@ -302,6 +308,10 @@ fun MuseumUiV17(){
                         "Crash Diagnostics" -> V25DiagnosticsScreen()
                         "Download Manager" -> V25Downloads(monuments)
                         "Achievements" -> V25Achievements(monuments,prefs.getInt("best",0))
+                        "Recovery Settings" -> V26RecoverySettings()
+                        "Learning Packages" -> V26OfflinePacks(monuments)
+                        "3D Performance" -> V26PerformanceDashboard()
+                        "Update Center" -> V26UpdateManager()
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
@@ -316,7 +326,7 @@ fun MuseumUiV17(){
                             listOf("Home","Gallery","Heritage 3D","AR View","Museum Map",
                                 "Indoor Tour","Collections","Drive Library","Heritage Photos","History Timeline",
                                 "Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia","Offline Learning",
-                                "Offline Photos","Museum Tour Progress","Samsung QA Checklist","Crash Diagnostics","Download Manager","Achievements","Profile","Certificate","Settings").forEach{label->
+                                "Offline Photos","Museum Tour Progress","Samsung QA Checklist","Crash Diagnostics","Download Manager","Achievements","Recovery Settings","Learning Packages","3D Performance","Update Center","Profile","Certificate","Settings").forEach{label->
                                 TextButton(onClick={go(label)},modifier=Modifier.fillMaxWidth()){
                                     Text("✦  "+label,color=V17White,
                                         modifier=Modifier.fillMaxWidth(),fontSize=15.sp)

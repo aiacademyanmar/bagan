@@ -32,6 +32,7 @@ strong{color:#f3bd69}
 const DATA=__HERITAGE_MODEL_DATA__;
 const canvas=document.getElementById('view'),notice=document.getElementById('notice');
 const gl=canvas.getContext('webgl',{antialias:true,alpha:false});
+let fps=0,frames=0,lastSampleTime=performance.now(),triangles=0,loadMs=0;
 let current=0,parts=[],bounds=null,hotspots=[],hotspotButtons=[],running=true,yaw=.44,pitch=.27,distance=20,center=[0,3,0],pointerDown=false,lastX=0,lastY=0,pinch=0;
 if(!gl){notice.textContent='WebGL not supported on this Android device';}
 function shader(kind,text){
@@ -150,6 +151,7 @@ function updateHotspots(m){
  });
 }
 function showMonument(index){
+ const modelStarted=performance.now();
  index=(index+DATA.length)%DATA.length;
  current=index;const item=DATA[current];
  document.getElementById('title').textContent=item.myanmar+' • '+item.name;
@@ -158,11 +160,17 @@ function showMonument(index){
  document.querySelectorAll('nav button').forEach((b,i)=>b.classList.toggle('sel',i===current));
  if(!gl)return;
  parts.forEach(p=>{gl.deleteBuffer(p.pos);gl.deleteBuffer(p.normal);gl.deleteBuffer(p.indices)});
- try{parts=parseGLB(item.glb);buildHotspots()}catch(e){parts=[];bounds=null;document.getElementById("hotspot-layer").textContent="";notice.textContent='3D loading error: '+e.message}
+ try{parts=parseGLB(item.glb);triangles=parts.reduce((a,p)=>a+p.count/3,0);buildHotspots()}catch(e){parts=[];triangles=0;bounds=null;document.getElementById("hotspot-layer").textContent="";notice.textContent='3D loading error: '+e.message}
+ loadMs=Math.max(0,performance.now()-modelStarted);
  yaw=.45;pitch=.25;center=[0,3.0,0];
  distance=item.category==='Temple'?30:(item.category==='Gate'?22:(item.category==='Inscription'?13:20));
 }
-function selectMonument(index){showMonument(index)}
+function selectMonument(index){index=(index+DATA.length)%DATA.length;if(index===current&&parts.length)return;showMonument(index)}
+window.getBaganViewerStats=()=>JSON.stringify({
+ model:DATA[current].name,fps:Math.round(fps*10)/10,
+ triangles:Math.round(triangles),loadMs:Math.round(loadMs),
+ webgl:!!gl
+});
 function stepModel(delta){showMonument(current+delta)}
 function resetView(){showMonument(current)}
 function zoom(factor){distance=Math.min(80,Math.max(5,distance*factor))}
@@ -180,6 +188,12 @@ function perspective(aspect){let f=1/Math.tan(.8/2),n=.1,F=100,r=1/(n-F);
 function multiply(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o}
 function render(){
  if(!gl||!running)return;
+ frames++;
+ const now=performance.now();
+ if(now-lastSampleTime>=1500){
+  fps=1000*frames/(now-lastSampleTime);
+  frames=0;lastSampleTime=now;
+ }
  const dpr=Math.min(2,window.devicePixelRatio||1),w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
  gl.viewport(0,0,w,h);gl.clearColor(.09,.055,.038,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);

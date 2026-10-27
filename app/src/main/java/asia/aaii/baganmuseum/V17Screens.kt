@@ -360,7 +360,7 @@ internal fun V17Menu(go:(String)->Unit){
     V17Section("Explore Bagan Museum")
     listOf("Home","Gallery","Heritage 3D","AR View","Museum Map","Indoor Tour",
         "Collections","History Timeline","Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia",
-        "Search","Profile","Certificate","Settings","Offline Learning").forEach{label->
+        "Search","Profile","Certificate","Settings","Recovery Settings","Learning Packages","3D Performance","Update Center","Offline Learning").forEach{label->
         Surface(onClick={go(label)},color=V17Surface,shape=RoundedCornerShape(14.dp),
             modifier=Modifier.fillMaxWidth().padding(vertical=4.dp)){
             Row(Modifier.padding(15.dp),verticalAlignment=Alignment.CenterVertically){
