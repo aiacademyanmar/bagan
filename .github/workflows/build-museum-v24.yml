@@ -1,0 +1,43 @@
+name: Build Bagan Museum V2.4 Native APK
+on:
+  push:
+    branches: [bagan-museum-native-v2-4]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Generate museum GLB assets
+        run: |
+          python3 tools/generate_glb.py
+          python3 tools/build_heritage_models_v16.py
+      - name: Compile APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Validate APK content
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile("app/build/outputs/apk/debug/app-debug.apk") as z:
+            names=z.namelist()
+            assert len([n for n in names if n.startswith("assets/models/") and n.endswith(".glb")])==10
+            assert "AndroidManifest.xml" in names
+            assert b"visibilitychange" in z.read("assets/heritage_viewer_v16.html")
+          print("Verified: 10 offline GLBs and viewer lifecycle listener")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bagan-Museum-Native-V2.4-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

@@ -296,6 +296,9 @@ fun MuseumUiV17(){
                         "Offline Learning" -> V17Offline { destination->go(destination) }
                         "Offline Multimedia" -> V23OfflineMultimedia(monuments,{i->chosen=i;go("Heritage 3D")},{i->chosen=i;go("Audio Guide")},{go("Heritage Photos")})
                         "Audio Dashboard" -> V23AudioDashboard(monuments){i->chosen=i;go("Audio Guide")}
+                        "Offline Photos" -> V24OfflinePhotos(monuments){i->chosen=i;go("Monument Detail")}
+                        "Museum Tour Progress" -> V24TourProgress(monuments){i->chosen=i;go("Heritage 3D")}
+                        "Samsung QA Checklist" -> V24SamsungChecklist()
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
@@ -310,7 +313,7 @@ fun MuseumUiV17(){
                             listOf("Home","Gallery","Heritage 3D","AR View","Museum Map",
                                 "Indoor Tour","Collections","Drive Library","Heritage Photos","History Timeline",
                                 "Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia","Offline Learning",
-                                "Profile","Certificate","Settings").forEach{label->
+                                "Offline Photos","Museum Tour Progress","Samsung QA Checklist","Profile","Certificate","Settings").forEach{label->
                                 TextButton(onClick={go(label)},modifier=Modifier.fillMaxWidth()){
                                     Text("✦  "+label,color=V17White,
                                         modifier=Modifier.fillMaxWidth(),fontSize=15.sp)
