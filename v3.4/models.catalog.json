@@ -1,0 +1,137 @@
+{
+  "version": "3.4",
+  "source_folder_id": "1d9vs81uKgfKc9xcfaTmIBnN5J0-o2nCG",
+  "access_note": "File IDs verified by connected Drive; download permissions and rendering are not yet verified.",
+  "models": [
+    {
+      "id": "shwezigon",
+      "name_mm": "ရွှေစည်းခုံစေတီ",
+      "filename": "Shwezigon_Pagoda.glb",
+      "drive_file_id": "1Q_veLIGE00yUxV9UNINYXoiAi2QARbOS",
+      "size_bytes": 7784256,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1Q_veLIGE00yUxV9UNINYXoiAi2QARbOS/view",
+      "download_endpoint": "/api/model.php?id=shwezigon"
+    },
+    {
+      "id": "ananda",
+      "name_mm": "အာနန္ဒာဘုရား",
+      "filename": "Ananda_Temple.glb",
+      "drive_file_id": "1CGuPzEh1j1G2y8rdOJGNYYm3xJnKBwie",
+      "size_bytes": 7304496,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1CGuPzEh1j1G2y8rdOJGNYYm3xJnKBwie/view",
+      "download_endpoint": "/api/model.php?id=ananda"
+    },
+    {
+      "id": "htilominlo",
+      "name_mm": "ထီးလိုမင်းလိုဘုရား",
+      "filename": "Htilominlo_Temple.glb",
+      "drive_file_id": "13-55kND78INyGKvdybrqmHV-3kSRdemZ",
+      "size_bytes": 8774980,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/13-55kND78INyGKvdybrqmHV-3kSRdemZ/view",
+      "download_endpoint": "/api/model.php?id=htilominlo"
+    },
+    {
+      "id": "thatbyinnyu",
+      "name_mm": "သဗ္ဗညုဘုရား",
+      "filename": "Thatbyinnyu_Temple.glb",
+      "drive_file_id": "1bgEDfLffGtW58hp_skd5q9prSLWHVzzC",
+      "size_bytes": 11132368,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1bgEDfLffGtW58hp_skd5q9prSLWHVzzC/view",
+      "download_endpoint": "/api/model.php?id=thatbyinnyu"
+    },
+    {
+      "id": "dhammayangyi",
+      "name_mm": "ဓမ္မရံကြီးဘုရား",
+      "filename": "Dhammayangyi_Temple.glb",
+      "drive_file_id": "1G7autBQod2JgapM00t0FugQ3mZUqOnuB",
+      "size_bytes": 3419828,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1G7autBQod2JgapM00t0FugQ3mZUqOnuB/view",
+      "download_endpoint": "/api/model.php?id=dhammayangyi"
+    },
+    {
+      "id": "shwesandaw",
+      "name_mm": "ရွှေဆံတော်စေတီ",
+      "filename": "Shwesandaw_Bagan.glb",
+      "drive_file_id": "1_BfOf9Vt5kmsvIy4Q8i8G_btfOc_OPT8",
+      "size_bytes": 3093840,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1_BfOf9Vt5kmsvIy4Q8i8G_btfOc_OPT8/view",
+      "download_endpoint": "/api/model.php?id=shwesandaw"
+    },
+    {
+      "id": "bupaya",
+      "name_mm": "ဗူးဘုရား",
+      "filename": "Bupaya_Realistic.glb",
+      "drive_file_id": "1CbMY2BsQmHGVFXF49zmHf60WATXZFfv9",
+      "size_bytes": 15604828,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1CbMY2BsQmHGVFXF49zmHf60WATXZFfv9/view",
+      "download_endpoint": "/api/model.php?id=bupaya"
+    },
+    {
+      "id": "gawdawpalin",
+      "name_mm": "ကန်တော့ပလ္လင်ဘုရား",
+      "filename": "Gawdawpalin_Temple.glb",
+      "drive_file_id": "1T24oBJKJ4O_kUlF7kpZ7Z89_QH-GJMze",
+      "size_bytes": 8376760,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1T24oBJKJ4O_kUlF7kpZ7Z89_QH-GJMze/view",
+      "download_endpoint": "/api/model.php?id=gawdawpalin"
+    },
+    {
+      "id": "alodawpyae",
+      "name_mm": "အလိုတော်ပြည့်ဘုရား",
+      "filename": "Alodawpyae_Pagoda.glb",
+      "drive_file_id": "1UoRssPa2TXBanmqusuVW9aU1zao_VdZE",
+      "size_bytes": 3881712,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1UoRssPa2TXBanmqusuVW9aU1zao_VdZE/view",
+      "download_endpoint": "/api/model.php?id=alodawpyae"
+    },
+    {
+      "id": "lawka-hteik-pan",
+      "name_mm": "လောကထိပ်ပန်ဘုရား",
+      "filename": "lawka_hteik_pan.glb",
+      "drive_file_id": "1rNlI9kNuD-r4hWBEnXrIKCHw2eNE0lkZ",
+      "size_bytes": 1705828,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1rNlI9kNuD-r4hWBEnXrIKCHw2eNE0lkZ/view",
+      "download_endpoint": "/api/model.php?id=lawka-hteik-pan"
+    },
+    {
+      "id": "myazedi",
+      "name_mm": "မြစေတီကျောက်စာ",
+      "filename": "Myazedi_Stone_Inscription.glb",
+      "drive_file_id": "1ITsD-E0d1USfF2N_xyyrAmT1qJrU0bWb",
+      "size_bytes": 5415032,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1ITsD-E0d1USfF2N_xyyrAmT1qJrU0bWb/view",
+      "download_endpoint": "/api/model.php?id=myazedi"
+    },
+    {
+      "id": "tharabar-gate",
+      "name_mm": "သရပါတံခါး",
+      "filename": "Tharabar_Gate.glb",
+      "drive_file_id": "1qypW62d-WJta7vZVE-WhEh1CruWP8ZyD",
+      "size_bytes": 16788964,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1qypW62d-WJta7vZVE-WhEh1CruWP8ZyD/view",
+      "download_endpoint": "/api/model.php?id=tharabar-gate"
+    },
+    {
+      "id": "bagan-entrance",
+      "name_mm": "ပုဂံဝင်ပေါက်",
+      "filename": "Bagan_Entrance_Gateway.glb",
+      "drive_file_id": "1ewXW_x2RLeil4JQ7DmAh8ploq0RApr7V",
+      "size_bytes": 4985540,
+      "mime_type": "model/gltf-binary",
+      "source_url": "https://drive.google.com/file/d/1ewXW_x2RLeil4JQ7DmAh8ploq0RApr7V/view",
+      "download_endpoint": "/api/model.php?id=bagan-entrance"
+    }
+  ]
+}
