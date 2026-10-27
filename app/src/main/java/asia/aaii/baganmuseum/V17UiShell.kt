@@ -255,7 +255,7 @@ fun MuseumUiV17(){
                     when(current){
                         "Home" -> V18Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                         "Gallery" -> V18Gallery(monuments,category,{category=it},search,{search=it},
-                            favorites,{i->chosen=i;go("Monument Detail")},{id->saveFavorite(id)})
+                            favorites,{i->chosen=i;go("Monument Detail")},{id->saveFavorite(id)},{go("Heritage Photos")})
                         "Monument Detail" -> V18Detail(monuments[chosen],chosen,
                             monuments[chosen].slug in favorites,
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
@@ -266,7 +266,8 @@ fun MuseumUiV17(){
                             MuseumIndoorNavigatorV14(onExplore3d={go("Heritage 3D")},
                                 onArtifact={go("Collections")})
                         }
-                        "Museum Map" -> V17Map { destination->go(destination) }
+                        "Museum Map" -> V20MapDirectory(monuments){i->chosen=i;go("Monument Detail")}
+                        "Heritage Photos" -> V20PhotoGallery(monuments){i->chosen=i;go("Monument Detail")}
                         "Collections" -> V17Collections {i->artifactIndex=i;go("Artifact Detail")}
                         "Artifact Detail" -> V17Artifact(artifactIndex,{destination->go(destination)})
                         "History Timeline" -> V17History()
@@ -305,7 +306,7 @@ fun MuseumUiV17(){
                             Text("Explore • Learn • Preserve",color=V17White,fontSize=11.sp)
                             Spacer(Modifier.height(12.dp))
                             listOf("Home","Gallery","Heritage 3D","AR View","Museum Map",
-                                "Indoor Tour","Collections","Drive Library","History Timeline",
+                                "Indoor Tour","Collections","Drive Library","Heritage Photos","History Timeline",
                                 "Audio Guide","Quiz","Favorites","Offline Learning",
                                 "Profile","Certificate","Settings").forEach{label->
                                 TextButton(onClick={go(label)},modifier=Modifier.fillMaxWidth()){

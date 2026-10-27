@@ -31,5 +31,6 @@ internal fun V19Museum3D(selected:Int,items:List<V17Monument>,select:(Int)->Unit
   V17GoldenButton("Museum AR",Modifier.weight(1f),onClick=ar)
   V17NeutralButton("Info",Modifier.weight(1f),onClick=detail)
  }
+ V20Hotspots(items[safe])
  Text("AR places the museum concept, not the selected monument. Illustrations are not archaeological scans.",color=Color(0xFFCCB6A2),fontSize=11.sp)
 }

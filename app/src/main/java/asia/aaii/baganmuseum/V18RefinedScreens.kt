@@ -104,6 +104,11 @@ internal fun V18Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
             }
         }
     }
+    Spacer(Modifier.height(10.dp))
+    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+        V17NeutralButton("▤  Heritage Map",Modifier.weight(1f)){go("Museum Map")}
+        V17NeutralButton("▧  Real Photos ↗",Modifier.weight(1f)){go("Heritage Photos")}
+    }
     V17Section("Heritage Learning","Explore") {go("Offline Learning")}
     Row(Modifier.fillMaxWidth().background(Color(0xFFFAE9CC),RoundedCornerShape(17.dp)).padding(12.dp),
         verticalAlignment=Alignment.CenterVertically){
@@ -138,7 +143,7 @@ private fun ListCard(item:V17Monument,index:Int,selected:Boolean,open:()->Unit,t
 }
 @Composable
 internal fun V18Gallery(items:List<V17Monument>,category:String,setCategory:(String)->Unit,
-    search:String,setSearch:(String)->Unit,saved:Set<String>,open:(Int)->Unit,toggle:(String)->Unit){
+    search:String,setSearch:(String)->Unit,saved:Set<String>,open:(Int)->Unit,toggle:(String)->Unit,openPhoto:()->Unit){
     V18ScreenHeading("Explore Monuments","10 locations from your Drive heritage collection")
     OutlinedTextField(value=search,onValueChange=setSearch,modifier=Modifier.fillMaxWidth(),
         leadingIcon={Text("⌕",fontSize=27.sp,color=quietInk)},singleLine=true,
@@ -160,6 +165,7 @@ internal fun V18Gallery(items:List<V17Monument>,category:String,setCategory:(Str
         }
     }
     if(visible==0)Text("No results — try a different category.",color=quietInk)
+    V17NeutralButton("Browse heritage photographs online",Modifier.fillMaxWidth()){ openPhoto() }
     Text("Images are illustrative, not verified photos of the referenced monuments.",
         color=quietInk,fontSize=10.sp,modifier=Modifier.padding(top=10.dp))
 }
@@ -202,6 +208,9 @@ internal fun V18Detail(item:V17Monument,index:Int,saved:Boolean,toggle:()->Unit,
             }
         }
     }
+    Text("Photos open online; maps search locations, and the 3D artworks are illustrative.",color=quietInk,fontSize=11.sp)
+    V20HeritageDetail(item)
+
 }
 @Composable
 internal fun V18Bottom(current:String,onSelect:(String)->Unit){
