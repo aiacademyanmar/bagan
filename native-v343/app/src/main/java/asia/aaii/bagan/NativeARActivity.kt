@@ -51,7 +51,7 @@ class NativeARActivity:ComponentActivity() {
           if(anchor==null) {
            anchor=frame.getUpdatedTrackables(Plane::class.java)
              .firstOrNull {it.type==Plane.Type.HORIZONTAL_UPWARD_FACING}
-             ?.createAnchor(it.centerPose)
+             ?.let { plane -> plane.createAnchor(plane.centerPose) }
           }
         }
        ) {
