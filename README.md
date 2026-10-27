@@ -1,18 +1,26 @@
-# Bagan Museum Native Android V1.4
+# Bagan Museum V1.5 — Drive Heritage Library
+Version 1.5.0, branch `bagan-museum-native-v1-5`. V1.4 and repository main remain unchanged.
 
-**Branch:** `bagan-museum-native-v1-4`. Retains previous versions on their branches and does not overwrite the existing main application.
+## Source
+Authenticated Google Drive folder: https://drive.google.com/drive/folders/1PuQyz1T8T5s2bihHqKdpsLhbyARGGa6_
 
-## Shipped functionality
-- Native Kotlin / Jetpack Compose Bagan Museum mobile app, sample galleries, history, favorites and guided tour.
-- Offline 3D museum viewer (GLB), conceptual walkthrough, interior cutaway and five heritage information hotspots.
-- **Full GLB placement in optional ARCore native camera**. AR renderer now loads `bagan_museum_concept.glb` from assets and draws all GLB mesh primitives as one miniature museum at a tracked plane anchor (solid colors, no advanced PBR). If asset fails to load a simplified fallback monument renders instead.
-- **Four WebGL artifact models** (clay pot, inscription tablet, temple finial, heritage column), rotation/zoom and bilingual explanatory popups.
-- **Five-room concept navigation** with interactive room selection, previous/next buttons, and saved route progress.
-- Text-to-Speech guides inherited from V1.3. Requires a compatible installed TTS voice.
-- Artifacts, architecture and room mapping are creative educational concepts, **not a photographed or scientifically surveyed museum**, not actual archived artifacts and **not live indoor positioning**.
+Snapshot catalog of 10 Drive subfolders:
+Thatbyinnyu, Myazedi, Bagan Gateway, Tharabar Gate, Gawdawpalin, Ananda, Htilominlo, Alodawpyae, Shwezigon, Bupaya.
 
-## APK
-GitHub Actions > Build Bagan Museum Native APK V1.4 (branch).
-Produced artifact includes debug APK, GLB and offline HTML files. Android 8.0+; AR requires supported hardware, Google Play Services for AR and camera permissions. AR Runtime must be verified on a supported physical Samsung/Android device.
+The app bundles **only metadata** and uses Android implicit intents to open the original private Drive resources with the user's existing Google authentication. Access permissions apply. It does **not** copy private Drive pictures, Blender models or ZIPs into public GitHub or APK.
 
-Production signing, Play Store release, official museum content, accessibility wayfinding, real GPS and complete PBR AR are future milestones.
+## Features
+- Native Kotlin/Compose monument and artifact catalog, category search, Burmese/English descriptions, link to Blender source and Drive preview.
+- Locally generated QR code for each folder using ZXing, plus native Android link sharing.
+- Offline six-question museum and file-format learning quiz with stored best score.
+- All previous 3D concept model, native ARCore, guided tour and TTS features retained.
+
+## Limits
+- Online access is needed to open Drive previews or source models; Drive files can be restricted.
+- The source `.blend` files **are not yet automatically converted** to GLB or rendered as separate mobile 3D exhibits.
+- The offline 3D museum is still the original stylized V1.4 concept model.
+- The quiz is illustrative training content, not an official examination.
+- Must test Google Drive account access, ARCore runtime, QR scanning and device UI on an actual Android phone.
+
+## Build
+GitHub Actions workflow: Build Bagan Museum Native APK V1.5. Artifact contains debug APK, offline museum GLB and manifest JSON.
