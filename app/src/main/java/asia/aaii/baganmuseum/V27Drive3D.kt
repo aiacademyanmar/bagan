@@ -109,13 +109,15 @@ internal object V27Import {
 }
 
 @Composable
-internal fun V27Drive3DGallery() {
+internal fun V27Drive3DGallery(initialSlug:String?=null) {
     val ctx=LocalContext.current
     val scope=rememberCoroutineScope()
     var imported by remember{mutableIntStateOf(V27Import.count(ctx))}
     var status by remember{mutableStateOf("Import the matching Drive 3D ZIP once to view the original models offline.")}
     var busy by remember{mutableStateOf(false)}
-    var selected by remember{mutableIntStateOf(-1)}
+    var selected by remember(initialSlug){mutableIntStateOf(
+       V27Models.indexOfFirst{it.slug==initialSlug}
+    )}
     val launcher=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){uri->
         if(uri!=null){
             busy=true

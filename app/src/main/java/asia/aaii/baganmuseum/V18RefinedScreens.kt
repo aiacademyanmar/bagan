@@ -90,6 +90,12 @@ internal fun V18Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
         FeatureTile("✓","Quiz",{go("Quiz")})
     }
     Spacer(Modifier.height(8.dp))
+    V17Section("Explore Famous Bagan Sites","View all 30"){go("Gallery")}
+    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+        V17GoldenButton("ဘုရားပုထိုး 25",Modifier.weight(1f)){go("Famous Pagodas")}
+        V17NeutralButton("အထင်ကရနေရာ 5",Modifier.weight(1f)){go("Famous Landmarks")}
+    }
+    Spacer(Modifier.height(7.dp))
     V17Section("Featured Monuments","See all") {go("Gallery")}
     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){
         items.take(3).forEachIndexed{index,item->

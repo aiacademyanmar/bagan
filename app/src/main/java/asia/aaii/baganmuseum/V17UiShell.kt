@@ -219,6 +219,10 @@ fun MuseumUiV17(){
     val ctx=LocalContext.current
     val prefs=remember{ctx.getSharedPreferences("bagan_museum_ui_v17",Context.MODE_PRIVATE)}
     val monuments=remember(ctx){v17Catalog(ctx)}
+    val heritage30=remember(ctx){v28Catalog(ctx)}
+    var chosenV28 by rememberSaveable{mutableIntStateOf(0)}
+    var heritageGroup by rememberSaveable{mutableStateOf("all")}
+    var selectedDriveModel by rememberSaveable{mutableStateOf<String?>(null)}
     var current by rememberSaveable{mutableStateOf("Splash")}
     var lang by rememberSaveable{mutableStateOf(prefs.getString("lang","my")?:"my")}
     var chosen by rememberSaveable{mutableIntStateOf(0)}
@@ -254,8 +258,13 @@ fun MuseumUiV17(){
                     .padding(horizontal=14.dp,vertical=12.dp)){
                     when(current){
                         "Home" -> V18Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
-                        "Gallery" -> V18Gallery(monuments,category,{category=it},search,{search=it},
-                            favorites,{i->chosen=i;go("Monument Detail")},{id->saveFavorite(id)},{go("Heritage Photos")})
+                        "Gallery","Famous Pagodas","Famous Landmarks" -> V28Directory(
+                            heritage30,if(current=="Famous Pagodas")"temples" else if(current=="Famous Landmarks")"landmarks" else heritageGroup,
+                            {heritageGroup=it;go("Gallery")},lang,{i->chosenV28=i;go("Heritage Detail")})
+                        "Heritage Detail" -> V28Detail(
+                            heritage30[chosenV28],lang,heritage30[chosenV28].slug in favorites,
+                            {saveFavorite(heritage30[chosenV28].slug)},
+                            {slug->selectedDriveModel=slug;go("Drive 3D Models")})
                         "Monument Detail" -> V18Detail(monuments[chosen],chosen,
                             monuments[chosen].slug in favorites,
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
@@ -312,7 +321,7 @@ fun MuseumUiV17(){
                         "Learning Packages" -> V26OfflinePacks(monuments)
                         "3D Performance" -> V26PerformanceDashboard()
                         "Update Center" -> V26UpdateManager()
-                        "Drive 3D Models" -> V27Drive3DGallery()
+                        "Drive 3D Models" -> V27Drive3DGallery(selectedDriveModel)
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
@@ -324,7 +333,7 @@ fun MuseumUiV17(){
                             Text("✧ BAGAN MUSEUM",color=V17Yellow,fontSize=23.sp,fontWeight=FontWeight.Black)
                             Text("Explore • Learn • Preserve",color=V17White,fontSize=11.sp)
                             Spacer(Modifier.height(12.dp))
-                            listOf("Home","Gallery","Heritage 3D","AR View","Museum Map",
+                            listOf("Home","Gallery","Famous Pagodas","Famous Landmarks","Heritage 3D","AR View","Museum Map",
                                 "Indoor Tour","Collections","Drive Library","Heritage Photos","History Timeline",
                                 "Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia","Offline Learning",
                                 "Offline Photos","Museum Tour Progress","Samsung QA Checklist","Crash Diagnostics","Download Manager","Achievements","Recovery Settings","Learning Packages","3D Performance","Update Center","Drive 3D Models","Profile","Certificate","Settings").forEach{label->
