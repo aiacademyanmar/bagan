@@ -42,7 +42,9 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
     private TextView statusView;
     private Session session;
     private boolean installRequested;
-    private boolean resumed;
+    private volatile boolean resumed;
+    private volatile float arScale=1f, arRotation=0f;
+    private TextView transformLabel;
     private volatile boolean glReady;
     private int cameraTexture;
     private int backgroundProgram;
@@ -90,7 +92,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         hud.setPadding(18,22,18,18);
         hud.setBackgroundColor(0xAA1F1611);
         TextView title = new TextView(this);
-        title.setText("BAGAN AR V2.2 — "+selectedLabel);
+        title.setText("BAGAN AR V2.3 — "+selectedLabel);
         title.setTextColor(0xFFF3BD69);
         title.setTextSize(17);
         hud.addView(title);
@@ -112,11 +114,33 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         controls.addView(clear);
         controls.addView(close);
         hud.addView(controls);
+        transformLabel=new TextView(this);
+        transformLabel.setTextColor(0xFFFFD994);
+        hud.addView(transformLabel);
+        LinearLayout adjustments=new LinearLayout(this);
+        Button shrink=new Button(this);shrink.setText("Size -");
+        shrink.setOnClickListener(v->{arScale=Math.max(.25f,arScale/1.25f);updateTransformLabel();});
+        Button enlarge=new Button(this);enlarge.setText("Size +");
+        enlarge.setOnClickListener(v->{arScale=Math.min(3f,arScale*1.25f);updateTransformLabel();});
+        Button turn=new Button(this);turn.setText("Rotate");
+        turn.setOnClickListener(v->{arRotation=(arRotation+30f)%360f;updateTransformLabel();});
+        adjustments.addView(shrink,new LinearLayout.LayoutParams(0,-2,1));
+        adjustments.addView(enlarge,new LinearLayout.LayoutParams(0,-2,1));
+        adjustments.addView(turn,new LinearLayout.LayoutParams(0,-2,1));
+        hud.addView(adjustments);
+        Button reset=new Button(this);reset.setText("Reset 3D transforms");
+        reset.setOnClickListener(v->{arScale=1f;arRotation=0f;updateTransformLabel();});
+        hud.addView(reset);
+        updateTransformLabel();
         FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(-1,-2,Gravity.TOP);
         root.addView(hud,hp);
         setContentView(root);
     }
 
+    private void updateTransformLabel(){
+        if(transformLabel!=null)
+            transformLabel.setText(String.format(java.util.Locale.US,"Size %.2fx • Rotation %.0f°",arScale,arRotation));
+    }
     private void report(String msg) {
         runOnUiThread(() -> { if (statusView != null) statusView.setText(msg); });
     }
@@ -164,6 +188,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
     @Override protected void onPause() {
         super.onPause();
         if (resumed) {
+            resumed=false;
             surface.onPause();
             if (session != null) session.pause();
             resumed=false;
@@ -277,9 +302,10 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
             if(anchor != null && anchor.getTrackingState()==TrackingState.TRACKING) {
                 anchor.getPose().toMatrix(model,0);
                 if(entireMuseum!=null){
-                    Matrix.scaleM(model,0,.055f,.055f,.055f);
+                    Matrix.scaleM(model,0,.055f*arScale,.055f*arScale,.055f*arScale);
+                    Matrix.rotateM(model,0,arRotation,0f,1f,0f);
                     Matrix.translateM(model,0,0,.2f,0);
-                } else Matrix.scaleM(model,0,.28f,.28f,.28f);
+                } else { Matrix.scaleM(model,0,.28f*arScale,.28f*arScale,.28f*arScale); Matrix.rotateM(model,0,arRotation,0f,1f,0f); }
                 camera.getViewMatrix(view,0);
                 camera.getProjectionMatrix(projection,0,.1f,80f);
                 Matrix.multiplyMM(modelView,0,view,0,model,0);

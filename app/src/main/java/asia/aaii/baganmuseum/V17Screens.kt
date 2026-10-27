@@ -359,7 +359,7 @@ internal fun V17Certificate(name:String,best:Int,go:(String)->Unit){
 internal fun V17Menu(go:(String)->Unit){
     V17Section("Explore Bagan Museum")
     listOf("Home","Gallery","Heritage 3D","AR View","Museum Map","Indoor Tour",
-        "Collections","History Timeline","Audio Guide","Quiz","Favorites",
+        "Collections","History Timeline","Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia",
         "Search","Profile","Certificate","Settings","Offline Learning").forEach{label->
         Surface(onClick={go(label)},color=V17Surface,shape=RoundedCornerShape(14.dp),
             modifier=Modifier.fillMaxWidth().padding(vertical=4.dp)){

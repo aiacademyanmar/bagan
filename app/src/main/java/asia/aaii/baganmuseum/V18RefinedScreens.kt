@@ -109,6 +109,10 @@ internal fun V18Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
         V17NeutralButton("▤  Heritage Map",Modifier.weight(1f)){go("Museum Map")}
         V17NeutralButton("▧  Real Photos ↗",Modifier.weight(1f)){go("Heritage Photos")}
     }
+    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+      V17NeutralButton("Offline Library",Modifier.weight(1f)){go("Offline Multimedia")}
+      V17NeutralButton("Audio Progress",Modifier.weight(1f)){go("Audio Dashboard")}
+    }
     V17Section("Heritage Learning","Explore") {go("Offline Learning")}
     Row(Modifier.fillMaxWidth().background(Color(0xFFFAE9CC),RoundedCornerShape(17.dp)).padding(12.dp),
         verticalAlignment=Alignment.CenterVertically){

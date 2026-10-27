@@ -2,6 +2,8 @@ package asia.aaii.baganmuseum
 
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -31,6 +33,7 @@ internal fun V21MonumentAudio(items:List<V17Monument>,selected:Int,onSelect:(Int
  val ctx=LocalContext.current
  val current=selected.coerceIn(0,items.lastIndex)
  val prefs=remember{ctx.getSharedPreferences("bagan_audio_v22",0)}
+ val handler=remember{Handler(Looper.getMainLooper())}
  var completed by remember {mutableStateOf(prefs.getStringSet("completed",emptySet())?.toSet()?:emptySet<String>())}
  var myanmar by remember{mutableStateOf(true)}
  var ready by remember{mutableStateOf(false)}
@@ -51,7 +54,7 @@ internal fun V21MonumentAudio(items:List<V17Monument>,selected:Int,onSelect:(Int
             if(utteranceId.startsWith("v22-")){
                 val next=(prefs.getStringSet("completed",emptySet())?.toSet()?:emptySet())+slug
                 prefs.edit().putStringSet("completed",next).apply()
-                completed=next
+                handler.post{completed=next}
             }
         }
      })

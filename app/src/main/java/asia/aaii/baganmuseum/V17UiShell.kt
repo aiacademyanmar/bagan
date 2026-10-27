@@ -294,6 +294,8 @@ fun MuseumUiV17(){
                         "Menu" -> V17Menu { destination->go(destination) }
                         "Drive Library" -> V17DarkPanel{DriveMuseumCatalog()}
                         "Offline Learning" -> V17Offline { destination->go(destination) }
+                        "Offline Multimedia" -> V23OfflineMultimedia(monuments,{i->chosen=i;go("Heritage 3D")},{i->chosen=i;go("Audio Guide")},{go("Heritage Photos")})
+                        "Audio Dashboard" -> V23AudioDashboard(monuments){i->chosen=i;go("Audio Guide")}
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
@@ -307,7 +309,7 @@ fun MuseumUiV17(){
                             Spacer(Modifier.height(12.dp))
                             listOf("Home","Gallery","Heritage 3D","AR View","Museum Map",
                                 "Indoor Tour","Collections","Drive Library","Heritage Photos","History Timeline",
-                                "Audio Guide","Quiz","Favorites","Offline Learning",
+                                "Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia","Offline Learning",
                                 "Profile","Certificate","Settings").forEach{label->
                                 TextButton(onClick={go(label)},modifier=Modifier.fillMaxWidth()){
                                     Text("✦  "+label,color=V17White,

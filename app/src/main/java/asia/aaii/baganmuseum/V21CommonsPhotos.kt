@@ -81,6 +81,7 @@ private fun cacheWrite(ctx:Context,slug:String,photo:CommonsPhoto){
             ?.drop(10)?.forEach{it.delete();File(it.parentFile,it.nameWithoutExtension+".json").delete()}
     }catch(_:Exception){}
 }
+internal fun V23CachedPhotoCount(ctx:Context):Int = try{java.io.File(ctx.cacheDir,"commons_thumb_v22").listFiles()?.count{it.extension=="jpg"}?:0}catch(_:Exception){0}
 internal fun V22ClearPhotoCache(ctx:Context){
     synchronized(commonsPhotoCache){commonsPhotoCache.evictAll()}
     try{File(ctx.cacheDir,"commons_thumb_v22").deleteRecursively()}catch(_:Exception){}
