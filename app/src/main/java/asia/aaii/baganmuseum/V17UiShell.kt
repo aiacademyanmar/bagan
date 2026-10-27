@@ -290,7 +290,8 @@ fun MuseumUiV17(){
                         "Profile" -> V17Profile(visitor,{visitor=it;prefs.edit().putString("visitor",it).apply()},
                             favorites.size,prefs.getInt("best",0),{destination->go(destination)})
                         "Certificate" -> V18Certificate(visitor,prefs.getInt("best",0),{go("Quiz")})
-                        "Menu" -> V17Menu { destination->go(destination) }\n                        "Drive Library" -> V17DarkPanel{DriveMuseumCatalog()}
+                        "Menu" -> V17Menu { destination->go(destination) }
+                        "Drive Library" -> V17DarkPanel{DriveMuseumCatalog()}
                         "Offline Learning" -> V17Offline { destination->go(destination) }
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
