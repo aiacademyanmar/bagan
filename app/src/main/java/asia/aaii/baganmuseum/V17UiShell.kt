@@ -248,19 +248,19 @@ fun MuseumUiV17(){
             prefs.edit().putBoolean("onboard",true).apply();go("Home")
         }
         else -> Column(Modifier.fillMaxSize().background(V17Cream)){
-            V17Header(current,onBack={go("Home")},onMenu={openedMenu=!openedMenu})
+            V18Header(current,onBack={go("Home")},onMenu={openedMenu=!openedMenu})
             Box(Modifier.weight(1f)){
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(horizontal=14.dp,vertical=12.dp)){
                     when(current){
-                        "Home" -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
-                        "Gallery" -> V17Gallery(monuments,category,{category=it},search,{search=it},
+                        "Home" -> V18Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
+                        "Gallery" -> V18Gallery(monuments,category,{category=it},search,{search=it},
                             favorites,{i->chosen=i;go("Monument Detail")},{id->saveFavorite(id)})
-                        "Monument Detail" -> V17Detail(monuments[chosen],chosen,
+                        "Monument Detail" -> V18Detail(monuments[chosen],chosen,
                             monuments[chosen].slug in favorites,
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
-                        "Heritage 3D" -> V17DarkPanel { HeritageOffline3DV16(chosen) }
-                        "3D Viewer" -> V17DarkPanel { HeritageOffline3DV16(chosen) }
+                        "Heritage 3D" -> V17DarkPanel { V18Museum3D(chosen,{go("AR View")},{go("Monument Detail")}) }
+                        "3D Viewer" -> V17DarkPanel { V18Museum3D(chosen,{go("AR View")},{go("Monument Detail")}) }
                         "AR View" -> V17AR { destination->go(destination) }
                         "Indoor Tour" -> V17DarkPanel{
                             MuseumIndoorNavigatorV14(onExplore3d={go("Heritage 3D")},
@@ -282,15 +282,15 @@ fun MuseumUiV17(){
                                 quizIndex=0;quizSelection=-1;quizScore=0;quizDone=false
                             },go={destination->go(destination)})
                         "Favorites" -> V17Favorites(monuments,favorites,{i->chosen=i;go("Monument Detail")})
-                        "Audio Guide" -> V17DarkPanel{NativeGuideScreen()}
+                        "Audio Guide" -> V17DarkPanel{V18AudioGuide()}
                         "Search" -> V17Search(monuments,search,{search=it},{i->chosen=i;go("Monument Detail")})
                         "Settings" -> V17Settings(lang,{lang=it;prefs.edit().putString("lang",it).apply()},
                             autoVoice,{autoVoice=it;prefs.edit().putBoolean("autoVoice",it).apply()},
                             chosenTheme,{chosenTheme=it;prefs.edit().putString("theme",it).apply()},{destination->go(destination)})
                         "Profile" -> V17Profile(visitor,{visitor=it;prefs.edit().putString("visitor",it).apply()},
                             favorites.size,prefs.getInt("best",0),{destination->go(destination)})
-                        "Certificate" -> V17Certificate(visitor,prefs.getInt("best",0),{destination->go(destination)})
-                        "Menu" -> V17Menu { destination->go(destination) }
+                        "Certificate" -> V18Certificate(visitor,prefs.getInt("best",0),{go("Quiz")})
+                        "Menu" -> V17Menu { destination->go(destination) }\n                        "Drive Library" -> V17DarkPanel{DriveMuseumCatalog()}
                         "Offline Learning" -> V17Offline { destination->go(destination) }
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
@@ -318,7 +318,7 @@ fun MuseumUiV17(){
                     }
                 }
             }
-            V17Bottom(current,{destination->go(destination)})
+            V18Bottom(current,{destination->go(destination)})
         }
     }
 }

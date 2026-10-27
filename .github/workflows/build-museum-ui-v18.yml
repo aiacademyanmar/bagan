@@ -1,0 +1,50 @@
+name: Build Bagan Museum V1.8 Refined Native UI APK
+on:
+  push:
+    branches:
+      - bagan-museum-native-v1-8-refinement
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android SDK 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Generate ten offline heritage GLB models
+        run: |
+          python3 tools/generate_glb.py
+          python3 tools/build_heritage_models_v16.py
+      - name: Compile refined UI APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Verify models and package structure
+        run: |
+          python3 - <<'PY'
+          import zipfile,json,hashlib
+          from pathlib import Path
+          file=Path("app/build/outputs/apk/debug/app-debug.apk")
+          assert file.is_file()
+          with zipfile.ZipFile(file) as f:
+              files=f.namelist()
+              assert "assets/bagan_drive_catalog_v15.json" in files
+              assert "assets/heritage_viewer_v16.html" in files
+              assert "assets/artifacts.html" in files
+              assert len([n for n in files if n.startswith("assets/models/") and n.endswith(".glb")])==10
+              print("Validated APK and 10 GLB models")
+              print("APK SHA256:",hashlib.sha256(file.read_bytes()).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bagan-Museum-V1.8-Refined-UI-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
