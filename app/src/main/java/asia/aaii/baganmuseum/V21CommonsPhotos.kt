@@ -161,7 +161,7 @@ internal fun V21HeritagePhoto(item:V17Monument,modifier:Modifier=Modifier,showLa
 internal fun V21CommonsLicense(item:V17Monument){
     val context=LocalContext.current
     val photo by produceState<CommonsPhoto?>(initialValue=null,key1=item.slug){
-        value=withContext(Dispatchers.IO){fetchThumb(item,ctx)}
+        value=withContext(Dispatchers.IO){fetchThumb(item,context)}
     }
     if(photo!=null){
         val found=photo!!
