@@ -270,13 +270,13 @@ fun MuseumUiV17(){
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
                         "Heritage 3D" -> if(V26Recovery.isSafe(ctx))
                             V26SafeModeNotice{V26Recovery.setSafe(ctx,false);go("Home")}
-                            else V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
+                            else V17DarkPanel { V27Drive3DGallery(selectedDriveModel) }
                         "3D Viewer" -> if(V26Recovery.isSafe(ctx))
                             V26SafeModeNotice{V26Recovery.setSafe(ctx,false);go("Home")}
-                            else V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
+                            else V17DarkPanel { V27Drive3DGallery(selectedDriveModel) }
                         "AR View" -> if(V26Recovery.isSafe(ctx))
                             V26SafeModeNotice{V26Recovery.setSafe(ctx,false);go("Home")}
-                            else V22ARScreen(monuments,chosen,{index->chosen=index},{go("Heritage 3D")})
+                            else V27Drive3DGallery(selectedDriveModel)
                         "Indoor Tour" -> V17DarkPanel{
                             MuseumIndoorNavigatorV14(onExplore3d={go("Heritage 3D")},
                                 onArtifact={go("Collections")})

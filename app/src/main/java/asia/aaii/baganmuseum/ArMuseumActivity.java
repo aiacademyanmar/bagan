@@ -54,6 +54,9 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
     private final AtomicReference<PointF> tap = new AtomicReference<>();
     private FloatBuffer quad, uv, templeBase, templeRoof;
     private OfflineMuseumGlb entireMuseum;
+    private DriveArGlb driveMuseum;
+    private boolean driveMode=false;
+    private String driveFilename=null;
     private String selectedModel = "thatbyinnyu";
     private String selectedLabel = "Thatbyinnyu Temple";
     private static final String[] MODEL_SLUGS = new String[]{
@@ -68,6 +71,18 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         String requested=getIntent().getStringExtra("monument_slug");
         for(String allowed:MODEL_SLUGS){
             if(allowed.equals(requested)) {selectedModel=allowed;break;}
+        }
+        driveFilename=getIntent().getStringExtra("drive_glb_filename");
+        if(driveFilename!=null){
+            boolean valid=false;
+            for(String filename:new String[]{"lawka_hteik_pan.glb","Dhammayangyi_Temple.glb","Shwesandaw_Bagan.glb",
+              "Thatbyinnyu_Temple.glb","Myazedi_Stone_Inscription.glb","Bagan_Entrance_Gateway.glb",
+              "Tharabar_Gate.glb","Gawdawpalin_Temple.glb","Ananda_Temple.glb","Htilominlo_Temple.glb",
+              "Alodawpyae_Pagoda.glb","Shwezigon_Pagoda.glb","Bupaya_Realistic.glb"}){
+              if(filename.equals(driveFilename)){valid=true;break;}
+            }
+            if(!valid){driveFilename=null;}
+            else driveMode=true;
         }
         selectedLabel=getIntent().getStringExtra("monument_name");
         if(selectedLabel==null||selectedLabel.length()>80)selectedLabel=selectedModel;
@@ -99,7 +114,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         statusView = new TextView(this);
         statusView.setTextColor(0xFFFFEAD3);
         statusView.setTextSize(14);
-        statusView.setText("Move the phone slowly to find a flat surface. Tap the plane to place the selected 3D concept monument.");
+        statusView.setText("Move the phone slowly to find a flat surface. Tap the plane to place the selected imported Google Drive 3D model.");
         hud.addView(statusView);
         LinearLayout controls = new LinearLayout(this);
         Button clear = new Button(this);
@@ -196,6 +211,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
     }
 
     @Override protected void onDestroy() {
+        if(surface!=null)surface.queueEvent(()->{if(driveMuseum!=null){driveMuseum.release();driveMuseum=null;}});
         if (anchor != null) { anchor.detach(); anchor=null; }
         if (session != null) { session.close(); session=null; }
         super.onDestroy();
@@ -261,8 +277,19 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
             .55f,.35f,.55f,-.55f,.35f,.55f,0,1.6f,0,
             -.55f,.35f,.55f,-.55f,.35f,-.55f,0,1.6f,0
         });
-        try { entireMuseum=new OfflineMuseumGlb(this,"models/"+selectedModel+".glb"); }
-        catch(Exception e) { entireMuseum=null; report("GLB unavailable; using simplified AR shape: "+e.getClass().getSimpleName()); }
+        if(driveMode){
+            try{
+                java.io.File file=new java.io.File(getFilesDir(),"drive3d/models/"+driveFilename);
+                driveMuseum=new DriveArGlb(this,file);
+                report("Google Drive GLB ready: "+driveFilename+" • "+driveMuseum.sampledTriangles()+" triangles. Tap floor.");
+            }catch(Exception e){
+                driveMuseum=null;
+                report("Drive GLB failed to load: "+e.getClass().getSimpleName()+". Import ZIP then reopen AR.");
+            }
+        }else{
+            try { entireMuseum=new OfflineMuseumGlb(this,"models/"+selectedModel+".glb"); }
+            catch(Exception e) { entireMuseum=null; report("Concept GLB unavailable: "+e.getClass().getSimpleName()); }
+        }
         glReady=true;
         GLES20.glClearColor(.07f,.04f,.03f,1f);
     }
@@ -301,7 +328,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
             }
             if(anchor != null && anchor.getTrackingState()==TrackingState.TRACKING) {
                 anchor.getPose().toMatrix(model,0);
-                if(entireMuseum!=null){
+                if(driveMuseum!=null || entireMuseum!=null){
                     Matrix.scaleM(model,0,.055f*arScale,.055f*arScale,.055f*arScale);
                     Matrix.rotateM(model,0,arRotation,0f,1f,0f);
                     Matrix.translateM(model,0,0,.2f,0);
@@ -311,8 +338,9 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
                 Matrix.multiplyMM(modelView,0,view,0,model,0);
                 Matrix.multiplyMM(mvp,0,projection,0,modelView,0);
                 GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-                if(entireMuseum!=null) entireMuseum.draw(mvp);
-                else {
+                if(driveMuseum!=null) driveMuseum.draw(mvp);
+                else if(entireMuseum!=null) entireMuseum.draw(mvp);
+                else if(!driveMode) {
                     drawSolid(templeBase,18,new float[]{.64f,.33f,.20f,1});
                     drawSolid(templeRoof,12,new float[]{.93f,.68f,.25f,1});
                 }

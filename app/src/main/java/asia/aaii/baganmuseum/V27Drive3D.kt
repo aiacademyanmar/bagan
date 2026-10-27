@@ -156,6 +156,14 @@ internal fun V27Drive3DGallery(initialSlug:String?=null) {
         Spacer(Modifier.height(14.dp))
         Text(V27Models[selected].title,fontSize=19.sp,fontWeight=FontWeight.Bold,color=V17Ink)
         V27ImportedGLBViewer(V27Models[selected])
+        Spacer(Modifier.height(8.dp))
+        val chosenModel=V27Models[selected]
+        V17GoldenButton("◎ Place Drive 3D model in AR",Modifier.fillMaxWidth()){
+            val intent=android.content.Intent(ctx,ArMuseumActivity::class.java)
+            intent.putExtra("drive_glb_filename",chosenModel.filename)
+            intent.putExtra("monument_name",chosenModel.title)
+            ctx.startActivity(intent)
+        }
     }
     Spacer(Modifier.height(9.dp))
     Text("These are user-supplied original 3D assets. Import extracts only the 13 expected GLB filenames to app-private storage and does not access your Drive account.",fontSize=11.sp,color=V17Mute)
