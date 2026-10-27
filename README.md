@@ -1,12 +1,18 @@
-# Bagan Museum Native Android V1.3
-Branch: `bagan-museum-native-v1-3` — isolated from main and V1.2.
+# Bagan Museum Native Android V1.4
 
-- Bagan-themed offline Kotlin/Compose UI, gallery search/category, favorites, timeline and museum guided tour.
-- Offline procedural GLB building; exterior, interior cutaway, five hotspots and concept walk navigation.
-- Native English/Burmese Text-to-Speech with eight narration topics (language availability depends on phone).
-- Optional native ARCore camera placement: detect a floor and place an anchored procedural miniature temple marker. This does not AR-render the full GLB museum.
-- Camera permission requested on AR entry; ARCore service availability/device compatibility required.
-- Offline 3D remains available when AR is unavailable.
+**Branch:** `bagan-museum-native-v1-4`. Retains previous versions on their branches and does not overwrite the existing main application.
 
-Debug build: GitHub Actions > Build Bagan Museum Native APK V1.3. Artifact bundles APK, GLB, offline HTML viewer.
-Prototype only. No real surveyed building, official museum collection, real indoor navigation, GPS maps or signed production app. AR real-device performance is unverified until tested on compatible phone.
+## Shipped functionality
+- Native Kotlin / Jetpack Compose Bagan Museum mobile app, sample galleries, history, favorites and guided tour.
+- Offline 3D museum viewer (GLB), conceptual walkthrough, interior cutaway and five heritage information hotspots.
+- **Full GLB placement in optional ARCore native camera**. AR renderer now loads `bagan_museum_concept.glb` from assets and draws all GLB mesh primitives as one miniature museum at a tracked plane anchor (solid colors, no advanced PBR). If asset fails to load a simplified fallback monument renders instead.
+- **Four WebGL artifact models** (clay pot, inscription tablet, temple finial, heritage column), rotation/zoom and bilingual explanatory popups.
+- **Five-room concept navigation** with interactive room selection, previous/next buttons, and saved route progress.
+- Text-to-Speech guides inherited from V1.3. Requires a compatible installed TTS voice.
+- Artifacts, architecture and room mapping are creative educational concepts, **not a photographed or scientifically surveyed museum**, not actual archived artifacts and **not live indoor positioning**.
+
+## APK
+GitHub Actions > Build Bagan Museum Native APK V1.4 (branch).
+Produced artifact includes debug APK, GLB and offline HTML files. Android 8.0+; AR requires supported hardware, Google Play Services for AR and camera permissions. AR Runtime must be verified on a supported physical Samsung/Android device.
+
+Production signing, Play Store release, official museum content, accessibility wayfinding, real GPS and complete PBR AR are future milestones.

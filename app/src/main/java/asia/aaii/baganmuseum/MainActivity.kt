@@ -79,7 +79,7 @@ private fun Museum() {
         Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("BAGAN MUSEUM",color=gold,fontWeight=FontWeight.Black,fontSize=21.sp)
-                Text("Digital Heritage Experience • V1.3",color=grey,fontSize=11.sp)
+                Text("Digital Heritage Experience • V1.4",color=grey,fontSize=11.sp)
             }
             TextButton(onClick={page="Settings"}) { Text("⚙") }
         }
@@ -96,7 +96,10 @@ private fun Museum() {
                     OutlinedButton(onClick={page="History"},modifier=Modifier.fillMaxWidth()) {Text("Bagan History Timeline")}
                     OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Explore Interactive 3D Museum")}
                     OutlinedButton(onClick={page="Audio"},modifier=Modifier.fillMaxWidth()) {Text("မြန်မာ / English Audio Guide")}
-                    Button(onClick={page="AR"},modifier=Modifier.fillMaxWidth()) {Text("AR Camera • Place Miniature Temple")}
+                    Button(onClick={page="AR"},modifier=Modifier.fillMaxWidth()) {Text("AR Camera • Place 3D Museum")}
+                    OutlinedButton(onClick={page="Artifacts"},modifier=Modifier.fillMaxWidth()) {Text("3D Artifact Collection • 4 Interactive Models")}
+                    OutlinedButton(onClick={page="Rooms"},modifier=Modifier.fillMaxWidth()) {Text("Virtual Indoor Navigation • 5 Rooms")}
+                    OutlinedButton(onClick={page="Favorites"},modifier=Modifier.fillMaxWidth()) {Text("My Saved Exhibitions")}
                     Title("Featured Exhibitions")
                     samples.take(3).forEachIndexed { i,_ -> ExhibitRow(i){index=i;page="Detail"} }
                 }
@@ -130,13 +133,15 @@ private fun Museum() {
                     Text("※ အထက်ပါ Layout သည် Concept Design ဖြစ်ပြီး တကယ့်ပြတိုက်၏ Floor Plan မဟုတ်ပါ။",color=grey,fontSize=12.sp)
                 }
                 "3D" -> { ThreeDMuseumScreen() }
+                "Artifacts" -> { ArtifactCollectionV14() }
+                "Rooms" -> { MuseumIndoorNavigatorV14(onExplore3d={page="3D"},onArtifact={page="Artifacts"}) }
                 "AR" -> {
-                    Title("Native AR Camera Placement")
-                    Text("ARCore plane tracking: find a floor and tap to place a Bagan-inspired 3D monument.",color=grey)
+                    Title("Full Museum AR Placement")
+                    Text("ARCore plane tracking: find a floor and tap to place the Bagan Museum GLB concept model.",color=grey)
                     Spacer(Modifier.height(12.dp))
-                    Button(onClick={context.startActivity(android.content.Intent(context,ArMuseumActivity::class.java))},modifier=Modifier.fillMaxWidth()) {Text("📷 Launch Native AR Camera")}
+                    Button(onClick={context.startActivity(android.content.Intent(context,ArMuseumActivity::class.java))},modifier=Modifier.fillMaxWidth()) {Text("📷 Place Museum in AR")}
                     Spacer(Modifier.height(12.dp))
-                    Text("An ARCore-compatible phone and Google Play Services for AR are required. The miniature is a procedural monument, not the full museum GLB.",color=grey)
+                    Text("An ARCore-compatible phone and Google Play Services for AR are required. The app loads the included GLB. If it cannot load, a simplified fallback sculpture is shown.",color=grey)
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Open Offline 3D Museum Instead")}
                 }
@@ -195,16 +200,18 @@ private fun Museum() {
                     }) { Text(if(index.toString() in favs) "♥ Remove Favorite" else "♡ Add Favorite") }
                     OutlinedButton(onClick={page="3D"},modifier=Modifier.fillMaxWidth()) {Text("Explore Museum 3D Concept / Hotspots")}
                     OutlinedButton(onClick={page="Audio"},modifier=Modifier.fillMaxWidth()) {Text("Hear Related Audio Guide")}
+                    OutlinedButton(onClick={page="Artifacts"},modifier=Modifier.fillMaxWidth()) {Text("Explore 3D Artifact Collection")}
+                    OutlinedButton(onClick={page="Audio"},modifier=Modifier.fillMaxWidth()) {Text("Hear Related Audio Guide")}
                     Note()
                 }
                 "Settings" -> {
                     Title("Settings")
-                    Text("Bagan Museum Native V1.3",color=cream)
+                    Text("Bagan Museum Native V1.4",color=cream)
                     Text("Offline-first educational demo",color=grey)
                     Spacer(Modifier.height(18.dp))
                     OutlinedButton(onClick={store.edit().remove("entered").apply();first=true}) {Text("Show Welcome Screen")}
                     Title("Future Updates")
-                    Text("3D and Audio Guide are in V1.3. AR world tracking and GPS Maps need a future update.",color=grey)
+                    Text("3D and Audio Guide are in V1.4. AR world tracking and GPS Maps need a future update.",color=grey)
                     Note()
                 }
             }
@@ -212,7 +219,7 @@ private fun Museum() {
         }
         HorizontalDivider(color=earth)
         Row(Modifier.fillMaxWidth().padding(4.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            listOf("Home" to "⌂","Gallery" to "▦","3D" to "◈","AR" to "◉","Audio" to "♫").forEach { (item,icon) ->
+            listOf("Home" to "⌂","Gallery" to "▦","3D" to "◈","Artifacts" to "🏺","Rooms" to "▤").forEach { (item,icon) ->
                 TextButton(onClick={page=item},contentPadding=PaddingValues(horizontal=3.dp,vertical=2.dp)) {
                     Column(horizontalAlignment=Alignment.CenterHorizontally) {
                         Text(icon,color=if(page==item) gold else grey,fontSize=19.sp)

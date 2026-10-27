@@ -51,6 +51,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
     private Anchor anchor;
     private final AtomicReference<PointF> tap = new AtomicReference<>();
     private FloatBuffer quad, uv, templeBase, templeRoof;
+    private OfflineMuseumGlb entireMuseum;
     private final float[] view = new float[16], projection = new float[16];
     private final float[] model = new float[16], modelView = new float[16], mvp = new float[16];
 
@@ -77,14 +78,14 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         hud.setPadding(18,22,18,18);
         hud.setBackgroundColor(0xAA1F1611);
         TextView title = new TextView(this);
-        title.setText("BAGAN MUSEUM — NATIVE AR 1.3");
+        title.setText("BAGAN MUSEUM — FULL GLB AR 1.4");
         title.setTextColor(0xFFF3BD69);
         title.setTextSize(17);
         hud.addView(title);
         statusView = new TextView(this);
         statusView.setTextColor(0xFFFFEAD3);
         statusView.setTextSize(14);
-        statusView.setText("Move the phone slowly to find a flat surface. Tap the plane to place a miniature Bagan-inspired monument.");
+        statusView.setText("Move the phone slowly to find a flat surface. Tap the plane to place the full 3D concept museum.");
         hud.addView(statusView);
         LinearLayout controls = new LinearLayout(this);
         Button clear = new Button(this);
@@ -223,6 +224,8 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
             .55f,.35f,.55f,-.55f,.35f,.55f,0,1.6f,0,
             -.55f,.35f,.55f,-.55f,.35f,-.55f,0,1.6f,0
         });
+        try { entireMuseum=new OfflineMuseumGlb(this); }
+        catch(Exception e) { entireMuseum=null; report("GLB unavailable; using simplified AR shape: "+e.getClass().getSimpleName()); }
         glReady=true;
         GLES20.glClearColor(.07f,.04f,.03f,1f);
     }
@@ -253,7 +256,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
                         if(plane.getType()==Plane.Type.HORIZONTAL_UPWARD_FACING && plane.isPoseInPolygon(hit.getHitPose())) {
                             if(anchor!=null)anchor.detach();
                             anchor=hit.createAnchor();
-                            report("Miniature temple placed on the detected surface. Tap another position to move it.");
+                            report("Full museum placed on the detected surface. Tap another position to move it.");
                             break;
                         }
                     }
@@ -261,14 +264,20 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
             }
             if(anchor != null && anchor.getTrackingState()==TrackingState.TRACKING) {
                 anchor.getPose().toMatrix(model,0);
-                Matrix.scaleM(model,0,.28f,.28f,.28f);
+                if(entireMuseum!=null){
+                    Matrix.scaleM(model,0,.019f,.019f,.019f);
+                    Matrix.translateM(model,0,0,.5f,0);
+                } else Matrix.scaleM(model,0,.28f,.28f,.28f);
                 camera.getViewMatrix(view,0);
                 camera.getProjectionMatrix(projection,0,.1f,80f);
                 Matrix.multiplyMM(modelView,0,view,0,model,0);
                 Matrix.multiplyMM(mvp,0,projection,0,modelView,0);
                 GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-                drawSolid(templeBase,18,new float[]{.64f,.33f,.20f,1});
-                drawSolid(templeRoof,12,new float[]{.93f,.68f,.25f,1});
+                if(entireMuseum!=null) entireMuseum.draw(mvp);
+                else {
+                    drawSolid(templeBase,18,new float[]{.64f,.33f,.20f,1});
+                    drawSolid(templeRoof,12,new float[]{.93f,.68f,.25f,1});
+                }
                 GLES20.glDisable(GLES20.GL_DEPTH_TEST);
             }
         } catch(Exception ex) {

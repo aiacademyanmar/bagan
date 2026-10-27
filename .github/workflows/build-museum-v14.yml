@@ -1,0 +1,51 @@
+name: Build Bagan Museum Native APK V1.4
+on:
+  push:
+    branches:
+      - bagan-museum-native-v1-4
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+      - uses: android-actions/setup-android@v4
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Generate offline museum GLB and viewer
+        run: python3 tools/generate_glb.py
+      - name: Build debug APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Validate and list APK content
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          apk=Path("app/build/outputs/apk/debug/app-debug.apk")
+          assert apk.is_file()
+          with zipfile.ZipFile(apk) as z:
+              paths=set(z.namelist())
+              for item in ("assets/bagan_museum_concept.glb","assets/temple_viewer.html","assets/artifacts.html"):
+                  assert item in paths, f"missing asset {item}"
+                  print(item, z.getinfo(item).file_size)
+              print("Valid APK:",apk,"bytes:",apk.stat().st_size)
+          PY
+      - name: Publish APK, GLB and offline viewer assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bagan-Museum-Native-V1.4-APK-GLB
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/src/main/assets/bagan_museum_concept.glb
+            app/src/main/assets/temple_viewer.html
+            app/src/main/assets/artifacts.html
+          if-no-files-found: error
