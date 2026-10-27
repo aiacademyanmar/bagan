@@ -1,0 +1,93 @@
+[
+  {
+    "id": "shwezigon",
+    "name": "ရွှေစည်းခုံစေတီ",
+    "english": "Shwezigon Pagoda",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Shwezigon_Pagoda.glb"
+  },
+  {
+    "id": "ananda",
+    "name": "အာနန္ဒာဘုရား",
+    "english": "Ananda Temple",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Ananda_Temple.glb"
+  },
+  {
+    "id": "htilominlo",
+    "name": "ထီးလိုမင်းလိုဘုရား",
+    "english": "Htilominlo Temple",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Htilominlo_Temple.glb"
+  },
+  {
+    "id": "thatbyinnyu",
+    "name": "သဗ္ဗညုဘုရား",
+    "english": "Thatbyinnyu Temple",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Thatbyinnyu_Temple.glb"
+  },
+  {
+    "id": "dhammayangyi",
+    "name": "ဓမ္မရံကြီးဘုရား",
+    "english": "Dhammayangyi Temple",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Dhammayangyi_Temple.glb"
+  },
+  {
+    "id": "shwesandaw",
+    "name": "ရွှေဆံတော်စေတီ",
+    "english": "Shwesandaw Pagoda",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Shwesandaw_Bagan.glb"
+  },
+  {
+    "id": "bupaya",
+    "name": "ဗူးဘုရား",
+    "english": "Bupaya Pagoda",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Bupaya_Realistic.glb"
+  },
+  {
+    "id": "gawdawpalin",
+    "name": "ကန်တော့ပလ္လင်ဘုရား",
+    "english": "Gawdawpalin Temple",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Gawdawpalin_Temple.glb"
+  },
+  {
+    "id": "alodawpyae",
+    "name": "အလိုတော်ပြည့်ဘုရား",
+    "english": "Alodawpyae Pagoda",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Alodawpyae_Pagoda.glb"
+  },
+  {
+    "id": "lawka-hteik-pan",
+    "name": "လောကထိပ်ပန်ဘုရား",
+    "english": "Lawka Hteik Pan",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/lawka_hteik_pan.glb"
+  },
+  {
+    "id": "myazedi",
+    "name": "မြစေတီကျောက်စာ",
+    "english": "Myazedi Stone Inscription",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Myazedi_Stone_Inscription.glb"
+  },
+  {
+    "id": "tharabar-gate",
+    "name": "သရပါတံခါး",
+    "english": "Tharabar Gate",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Tharabar_Gate.glb"
+  },
+  {
+    "id": "bagan-entrance",
+    "name": "ပုဂံဝင်ပေါက်",
+    "english": "Bagan Entrance Gateway",
+    "description": "ပုဂံ 3D Model",
+    "modelUrl": "models/Bagan_Entrance_Gateway.glb"
+  }
+]
