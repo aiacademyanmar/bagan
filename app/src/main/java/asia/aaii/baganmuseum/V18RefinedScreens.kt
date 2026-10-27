@@ -58,18 +58,8 @@ private fun PhotoConcept(height:Int,overlay:String?=null,modifier:Modifier=Modif
 }
 @Composable
 private fun MiniMonumentPhoto(index:Int,modifier:Modifier=Modifier){
-    val colors=listOf(Color(0xFFE2AC56),Color(0xFFBD844B),Color(0xFFBB7751),
-        Color(0xFF758D78),Color(0xFFCC936A),Color(0xFF987D5E))
-    Box(modifier.clip(RoundedCornerShape(11.dp)).background(colors[index%colors.size])) {
-        Image(painter=painterResource(R.drawable.museum_hero),contentDescription=null,
-            contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize())
-        Box(Modifier.fillMaxSize().background(colors[index%colors.size].copy(alpha=.25f)))
-        Box(Modifier.align(Alignment.BottomEnd).padding(4.dp)
-            .background(darkBrown.copy(alpha=.85f),RoundedCornerShape(5.dp))
-            .padding(horizontal=5.dp,vertical=2.dp)){
-            Text("${(index+1).toString().padStart(2,'0')}",fontSize=9.sp,color=cardGold)
-        }
-    }
+ val keys=listOf("thatbyinnyu","myazedi","entrance","tharabar","gawdawpalin","ananda","htilominlo","alodawpyae","shwezigon","bupaya")
+ MonumentArtworkV19(keys[index.coerceIn(0,9)],modifier)
 }
 @Composable
 private fun FeatureTile(symbol:String,title:String,onClick:()->Unit,modifier:Modifier=Modifier){
@@ -106,7 +96,7 @@ internal fun V18Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
             Surface(onClick={open(index)},modifier=Modifier.weight(1f),color=paleIvory,
                 shape=RoundedCornerShape(14.dp),shadowElevation=1.dp){
                 Column(Modifier.padding(6.dp)){
-                    MiniMonumentPhoto(index,Modifier.fillMaxWidth().height(91.dp))
+                    MonumentArtworkV19(item.slug,Modifier.fillMaxWidth().height(95.dp))
                     Spacer(Modifier.height(7.dp))
                     Text(item.mm,fontSize=10.sp,fontWeight=FontWeight.Bold,color=fineInk,maxLines=1)
                     Text(item.name,fontSize=9.sp,color=quietInk,maxLines=1,overflow=TextOverflow.Ellipsis)
@@ -131,7 +121,7 @@ private fun ListCard(item:V17Monument,index:Int,selected:Boolean,open:()->Unit,t
     Surface(onClick=open,modifier=Modifier.fillMaxWidth().padding(vertical=4.dp),color=paleIvory,
         shape=RoundedCornerShape(14.dp),shadowElevation=1.dp){
         Row(Modifier.padding(8.dp),verticalAlignment=Alignment.CenterVertically){
-            MiniMonumentPhoto(index,Modifier.size(width=84.dp,height=74.dp))
+            MonumentArtworkV19(item.slug,Modifier.size(width=90.dp,height=78.dp))
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)){
                 Text(item.mm,color=fineInk,fontWeight=FontWeight.Bold,fontSize=13.sp,maxLines=1)
@@ -176,7 +166,7 @@ internal fun V18Gallery(items:List<V17Monument>,category:String,setCategory:(Str
 @Composable
 internal fun V18Detail(item:V17Monument,index:Int,saved:Boolean,toggle:()->Unit,go:(String)->Unit){
     val ctx=LocalContext.current
-    PhotoConcept(235,tag="MONUMENT  "+(index+1)+" / 10")
+    MonumentArtworkV19(item.slug,Modifier.fillMaxWidth().height(235.dp),caption=true)
     Spacer(Modifier.height(12.dp))
     Row(verticalAlignment=Alignment.CenterVertically){
         Column(Modifier.weight(1f)){
