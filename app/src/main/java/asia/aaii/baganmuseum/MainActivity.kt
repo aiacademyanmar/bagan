@@ -46,7 +46,7 @@ class MainActivity:ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=earth,onSurface=cream,onBackground=cream,onPrimary=night)) {
-                Museum()
+                MuseumUiV17()
             }
         }
     }
