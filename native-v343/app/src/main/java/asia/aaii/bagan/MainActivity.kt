@@ -199,7 +199,7 @@ private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
   }
   Text("Drag: Rotate   •   Pinch: Zoom",color=Color.White,fontSize=11.sp,modifier=Modifier.align(Alignment.CenterHorizontally))
  }
- if(arHelp)AlertDialog(onDismissRequest={arHelp=false},title={Text("AR မရနိုင်ပါ")},
+ if(arHelp)androidx.compose.material3.AlertDialog(onDismissRequest={arHelp=false},title={Text("AR မရနိုင်ပါ")},
   text={Text("မူရင်း GLB ဖိုင်ကို cPanel မှ မရရှိသေးပါ။ ${t.url} သို့ GLB ဖိုင်တင်ပြီး ပြန်စမ်းပါ။")},
   confirmButton={TextButton(onClick={arHelp=false}){Text("OK")}})
 }
