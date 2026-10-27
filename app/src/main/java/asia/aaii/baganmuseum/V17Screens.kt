@@ -41,7 +41,7 @@ internal fun V17Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
         }
     }
     V17Section("Featured Monuments","See all"){go("Gallery")}
-    items.take(4).forEachIndexed{i,item->V17MonumentTile(item,i){open(i)}}
+    items.take(4).forEachIndexed{i,item->V17MonumentTile(item,i,onClick={open(i)})}
     V17Section("Heritage Learning")
     V17GoldenButton("▶  Start Museum Quiz",Modifier.fillMaxWidth()){go("Quiz")}
     Spacer(Modifier.height(9.dp))
@@ -266,7 +266,7 @@ internal fun V17Favorites(items:List<V17Monument>,saved:Set<String>,open:(Int)->
     V17Section("My Favorites")
     val filtered=items.withIndex().filter{it.value.slug in saved}
     if(filtered.isEmpty())Text("No favorites yet. Tap ♡ on any monument to save it.",color=V17Mute)
-    filtered.forEach{(i,item)->V17MonumentTile(item,i){open(i)}}
+    filtered.forEach{(i,item)->V17MonumentTile(item,i,onClick={open(i)})}
 }
 @Composable
 internal fun V17Search(items:List<V17Monument>,search:String,setSearch:(String)->Unit,open:(Int)->Unit){
@@ -275,7 +275,7 @@ internal fun V17Search(items:List<V17Monument>,search:String,setSearch:(String)-
         label={Text("Search monuments, artifacts...")},singleLine=true)
     items.forEachIndexed{i,item->
         if(search.isEmpty()||item.name.contains(search,true)||item.mm.contains(search,true)){
-            V17MonumentTile(item,i){open(i)}
+            V17MonumentTile(item,i,onClick={open(i)})
         }
     }
 }
