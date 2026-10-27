@@ -61,6 +61,7 @@ private fun Museum() {
     var tour by rememberSaveable { mutableIntStateOf(store.getInt("tour",0)) }
     var search by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf("All") }
+    var monumentIndex by rememberSaveable { mutableIntStateOf(0) }
     var favs by remember { mutableStateOf(store.getStringSet("favs",emptySet())?.toSet() ?: emptySet<String>()) }
     var first by rememberSaveable { mutableStateOf(!store.getBoolean("entered",false)) }
     BackHandler(!first && page!="Home") { page="Home" }
@@ -79,7 +80,7 @@ private fun Museum() {
         Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("BAGAN MUSEUM",color=gold,fontWeight=FontWeight.Black,fontSize=21.sp)
-                Text("Digital Heritage Experience • V1.5",color=grey,fontSize=11.sp)
+                Text("Digital Heritage Experience • V1.6",color=grey,fontSize=11.sp)
             }
             TextButton(onClick={page="Settings"}) { Text("⚙") }
         }
@@ -100,6 +101,7 @@ private fun Museum() {
                     OutlinedButton(onClick={page="Artifacts"},modifier=Modifier.fillMaxWidth()) {Text("3D Artifact Collection • 4 Interactive Models")}
                     OutlinedButton(onClick={page="Rooms"},modifier=Modifier.fillMaxWidth()) {Text("Virtual Indoor Navigation • 5 Rooms")}
                     Button(onClick={page="Drive Library"},modifier=Modifier.fillMaxWidth()) {Text("Bagan Drive Heritage Library • 10 Models")}
+                    Button(onClick={page="Heritage 3D"},modifier=Modifier.fillMaxWidth()) {Text("Explore 10 Offline Heritage 3D Models")}
                     OutlinedButton(onClick={page="Quiz"},modifier=Modifier.fillMaxWidth()) {Text("Offline Learning & Quiz")}
                     OutlinedButton(onClick={page="Favorites"},modifier=Modifier.fillMaxWidth()) {Text("My Saved Exhibitions")}
                     Title("Featured Exhibitions")
@@ -137,6 +139,7 @@ private fun Museum() {
                 "3D" -> { ThreeDMuseumScreen() }
                 "Artifacts" -> { ArtifactCollectionV14() }
                 "Drive Library" -> { DriveMuseumCatalog() }
+                "Heritage 3D" -> { HeritageOffline3DV16(monumentIndex) }
                 "Quiz" -> { MuseumQuizV15() }
                 "Rooms" -> { MuseumIndoorNavigatorV14(onExplore3d={page="3D"},onArtifact={page="Artifacts"}) }
                 "AR" -> {
@@ -210,12 +213,12 @@ private fun Museum() {
                 }
                 "Settings" -> {
                     Title("Settings")
-                    Text("Bagan Museum Native V1.5",color=cream)
+                    Text("Bagan Museum Native V1.6",color=cream)
                     Text("Offline-first educational demo",color=grey)
                     Spacer(Modifier.height(18.dp))
                     OutlinedButton(onClick={store.edit().remove("entered").apply();first=true}) {Text("Show Welcome Screen")}
                     Title("Future Updates")
-                    Text("3D and Audio Guide are in V1.5. AR world tracking and GPS Maps need a future update.",color=grey)
+                    Text("3D and Audio Guide are in V1.6. AR world tracking and GPS Maps need a future update.",color=grey)
                     Note()
                 }
             }
@@ -223,7 +226,7 @@ private fun Museum() {
         }
         HorizontalDivider(color=earth)
         Row(Modifier.fillMaxWidth().padding(4.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            listOf("Home" to "⌂","Drive Library" to "▦","3D" to "◈","Quiz" to "✓","Rooms" to "▤").forEach { (item,icon) ->
+            listOf("Home" to "⌂","Drive Library" to "▦","Heritage 3D" to "◈","Quiz" to "✓","Rooms" to "▤").forEach { (item,icon) ->
                 TextButton(onClick={page=item},contentPadding=PaddingValues(horizontal=3.dp,vertical=2.dp)) {
                     Column(horizontalAlignment=Alignment.CenterHorizontally) {
                         Text(icon,color=if(page==item) gold else grey,fontSize=19.sp)
