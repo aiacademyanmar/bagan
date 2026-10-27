@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import java.io.File
+import java.io.FileOutputStream
 import android.net.Uri
 import android.util.LruCache
 import android.widget.ImageView
@@ -51,9 +53,45 @@ private fun searchTerms(item:V17Monument):String{
     }
 }
 private fun uriEncode(text:String)=URLEncoder.encode(text,"UTF-8")
-private fun fetchThumb(item:V17Monument):CommonsPhoto? {
+private fun cacheFile(ctx:Context,slug:String):Pair<File,File> {
+    val folder=File(ctx.cacheDir,"commons_thumb_v22").apply{mkdirs()}
+    val clean=slug.replace(Regex("[^a-z0-9_-]"),"")
+    return File(folder,clean+".jpg") to File(folder,clean+".json")
+}
+private fun cacheRead(ctx:Context,slug:String):CommonsPhoto? {
+    return try {
+        val (image,metadata)=cacheFile(ctx,slug)
+        if(!image.exists()||!metadata.exists())null
+        else {
+            val json=JSONObject(metadata.readText())
+            val bitmap=BitmapFactory.decodeFile(image.absolutePath) ?: return null
+            CommonsPhoto(bitmap,json.getString("filePage"),json.getString("title"),
+                json.getString("credit"),json.getString("license"))
+        }
+    }catch(_:Exception){null}
+}
+private fun cacheWrite(ctx:Context,slug:String,photo:CommonsPhoto){
+    try{
+        val (image,meta)=cacheFile(ctx,slug)
+        FileOutputStream(image).use{photo.bitmap.compress(Bitmap.CompressFormat.JPEG,82,it)}
+        meta.writeText(JSONObject().put("filePage",photo.filePage).put("title",photo.title)
+           .put("credit",photo.credit).put("license",photo.license).toString())
+        val folder=image.parentFile
+        folder?.listFiles()?.filter{it.extension=="jpg"}?.sortedByDescending{it.lastModified()}
+            ?.drop(10)?.forEach{it.delete();File(it.parentFile,it.nameWithoutExtension+".json").delete()}
+    }catch(_:Exception){}
+}
+internal fun V22ClearPhotoCache(ctx:Context){
+    synchronized(commonsPhotoCache){commonsPhotoCache.evictAll()}
+    try{File(ctx.cacheDir,"commons_thumb_v22").deleteRecursively()}catch(_:Exception){}
+}
+private fun fetchThumb(item:V17Monument,ctx:Context):CommonsPhoto? {
     if(item.slug=="entrance")return null // imaginary gateway, not a real landmark
     synchronized(commonsPhotoCache){commonsPhotoCache.get(item.slug)?.let{return it}}
+    cacheRead(ctx,item.slug)?.let{
+        synchronized(commonsPhotoCache){commonsPhotoCache.put(item.slug,it)}
+        return it
+    }
     val api="https://commons.wikimedia.org/w/api.php?"+
         "action=query&format=json&formatversion=2&generator=search"+
         "&gsrnamespace=6&gsrlimit=5&gsrsearch="+uriEncode(searchTerms(item))+
@@ -88,6 +126,7 @@ private fun fetchThumb(item:V17Monument):CommonsPhoto? {
             }?:continue
             val result=CommonsPhoto(bmp,filePage,filename,credit,license)
             synchronized(commonsPhotoCache){commonsPhotoCache.put(item.slug,result)}
+            cacheWrite(ctx,item.slug,result)
             return result
         }
     } catch(_:Exception){ /* Network failure returns offline artwork. */ }
@@ -95,8 +134,9 @@ private fun fetchThumb(item:V17Monument):CommonsPhoto? {
 }
 @Composable
 internal fun V21HeritagePhoto(item:V17Monument,modifier:Modifier=Modifier,showLabel:Boolean=false){
+    val ctx=LocalContext.current
     val photo by produceState<CommonsPhoto?>(initialValue=null,key1=item.slug){
-        value=withContext(Dispatchers.IO){fetchThumb(item)}
+        value=withContext(Dispatchers.IO){fetchThumb(item,ctx)}
     }
     Box(modifier){
         if(photo!=null){
@@ -121,7 +161,7 @@ internal fun V21HeritagePhoto(item:V17Monument,modifier:Modifier=Modifier,showLa
 internal fun V21CommonsLicense(item:V17Monument){
     val context=LocalContext.current
     val photo by produceState<CommonsPhoto?>(initialValue=null,key1=item.slug){
-        value=withContext(Dispatchers.IO){fetchThumb(item)}
+        value=withContext(Dispatchers.IO){fetchThumb(item,ctx)}
     }
     if(photo!=null){
         val found=photo!!
@@ -144,12 +184,21 @@ private fun openResource(context:Context,url:String){
 }
 @Composable
 internal fun V21PhotoGallery(items:List<V17Monument>,openDetail:(Int)->Unit){
+    var cacheInfo by remember{mutableStateOf("")}
     val context=LocalContext.current
     Text("HERITAGE PHOTO COLLECTION",color=Color(0xFF3D2919),
         fontSize=22.sp,fontWeight=FontWeight.Black)
     Text("Internet photo search • Wikimedia Commons links with file licenses.",
         color=Color(0xFF86694D),fontSize=12.sp)
     Spacer(Modifier.height(12.dp))
+    Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+        Text("Saved photo previews: up to 10, app cache only",color=Color(0xFF86694D),
+            fontSize=11.sp,modifier=Modifier.weight(1f))
+        TextButton(onClick={V22ClearPhotoCache(context);cacheInfo="Cache cleared. Reload page to fetch photos again."}){
+            Text("Clear Cache",color=Color(0xFFB6803E),fontSize=11.sp)
+        }
+    }
+    if(cacheInfo.isNotBlank())Text(cacheInfo,color=Color(0xFF86694D),fontSize=11.sp)
     items.forEachIndexed{index,item->
         Surface(shape=RoundedCornerShape(16.dp),color=Color(0xFFFFF9F0),
             modifier=Modifier.fillMaxWidth().padding(bottom=13.dp)){

@@ -1,6 +1,7 @@
 package asia.aaii.baganmuseum
 
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -29,6 +30,8 @@ private val englishNarration=mapOf(
 internal fun V21MonumentAudio(items:List<V17Monument>,selected:Int,onSelect:(Int)->Unit){
  val ctx=LocalContext.current
  val current=selected.coerceIn(0,items.lastIndex)
+ val prefs=remember{ctx.getSharedPreferences("bagan_audio_v22",0)}
+ var completed by remember {mutableStateOf(prefs.getStringSet("completed",emptySet())?.toSet()?:emptySet<String>())}
  var myanmar by remember{mutableStateOf(true)}
  var ready by remember{mutableStateOf(false)}
  var message by remember{mutableStateOf("Initializing voice engine…")}
@@ -39,11 +42,27 @@ internal fun V21MonumentAudio(items:List<V17Monument>,selected:Int,onSelect:(Int
        message=if(ready)"Voice engine ready" else "Voice engine unavailable on this phone"
     }
  }
- DisposableEffect(tts){onDispose{tts.stop();tts.shutdown()}}
+ DisposableEffect(tts) {
+     tts.setOnUtteranceProgressListener(object:UtteranceProgressListener(){
+        override fun onStart(utteranceId:String?){}
+        override fun onError(utteranceId:String?){}
+        override fun onDone(utteranceId:String?){
+            val slug=utteranceId?.removePrefix("v22-")?.substringBefore("-my")?.substringBefore("-en")?:return
+            if(utteranceId.startsWith("v22-")){
+                val next=(prefs.getStringSet("completed",emptySet())?.toSet()?:emptySet())+slug
+                prefs.edit().putStringSet("completed",next).apply()
+                completed=next
+            }
+        }
+     })
+     onDispose{tts.stop();tts.shutdown()}
+ }
  val item=items[current]
  Text("MONUMENT AUDIO GUIDE",color=Color(0xFFF4C373),fontSize=21.sp,fontWeight=FontWeight.Black)
  Text(item.mm,color=Color.White,fontSize=19.sp,fontWeight=FontWeight.Bold)
  Text(item.name,color=Color(0xFFD2BCA0),fontSize=13.sp)
+ Text("Listening completed: "+completed.size+" / "+items.size,color=Color(0xFFF4C373),fontSize=12.sp)
+ LinearProgressIndicator(progress={completed.size/items.size.toFloat()},modifier=Modifier.fillMaxWidth().padding(vertical=8.dp))
  Spacer(Modifier.height(12.dp))
  V21HeritagePhoto(item,Modifier.fillMaxWidth().height(180.dp),showLabel=true)
  Spacer(Modifier.height(9.dp))
@@ -65,7 +84,7 @@ internal fun V21MonumentAudio(items:List<V17Monument>,selected:Int,onSelect:(Int
       message=if(myanmar)"Myanmar voice data not installed" else "English voice unavailable"
    }else{
       tts.setSpeechRate(rate)
-      tts.speak(content,TextToSpeech.QUEUE_FLUSH,null,"bagan-v21-"+item.slug)
+      tts.speak(content,TextToSpeech.QUEUE_FLUSH,null,"v22-"+item.slug+(if(myanmar)"-my" else "-en"))
       message="Speaking: "+item.name
    }
   }

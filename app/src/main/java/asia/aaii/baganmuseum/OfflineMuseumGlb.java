@@ -40,6 +40,9 @@ public final class OfflineMuseumGlb {
     }
 
     public OfflineMuseumGlb(Context context) throws Exception {
+        this(context, "bagan_museum_concept.glb");
+    }
+    public OfflineMuseumGlb(Context context,String assetPath) throws Exception {
         int p=GLES20.glCreateProgram();
         GLES20.glAttachShader(p,shader(GLES20.GL_VERTEX_SHADER,
             "attribute vec3 position; uniform mat4 mvp; void main(){gl_Position=mvp*vec4(position,1.0);}" ));
@@ -55,7 +58,7 @@ public final class OfflineMuseumGlb {
         color=GLES20.glGetUniformLocation(p,"color");
 
         byte[] file;
-        try(InputStream stream=context.getAssets().open("bagan_museum_concept.glb");
+        try(InputStream stream=context.getAssets().open(assetPath);
             ByteArrayOutputStream out=new ByteArrayOutputStream()) {
             byte[] buf=new byte[8192];int size;
             while((size=stream.read(buf))!=-1)out.write(buf,0,size);

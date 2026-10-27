@@ -261,7 +261,7 @@ fun MuseumUiV17(){
                             {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
                         "Heritage 3D" -> V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
                         "3D Viewer" -> V17DarkPanel { V19Museum3D(chosen,monuments,{index->chosen=index},{go("AR View")},{go("Monument Detail")}) }
-                        "AR View" -> V17AR { destination->go(destination) }
+                        "AR View" -> V22ARScreen(monuments,chosen,{index->chosen=index},{go("Heritage 3D")})
                         "Indoor Tour" -> V17DarkPanel{
                             MuseumIndoorNavigatorV14(onExplore3d={go("Heritage 3D")},
                                 onArtifact={go("Collections")})
