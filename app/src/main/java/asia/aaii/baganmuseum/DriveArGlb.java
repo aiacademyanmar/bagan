@@ -21,11 +21,11 @@ import java.util.Map;
  * Supports glTF2 scene graph hierarchy, FLOAT POSITION accessor strides,
  * uint8/uint16/uint32 triangle indices and material base-color factors.
  * Draws a bounded triangle sample on GLES2 phones for stability.
- * Embedded textures / PBR illumination are not implemented in this renderer.
+ * A simple directional tint is applied. Embedded image textures / full PBR are NOT implemented in AR.\n * Textures are supported by the separate offline 3D gallery WebGL renderer.
  * No illustrative or replacement geometry is silently substituted.
  */
 public final class DriveArGlb {
-    private static final int MAX_TRIANGLES=145000;
+    private static final int MAX_TRIANGLES=90000;
     private static final int MAX_FILE_BYTES=65_000_000;
     private static final class FloatList {
         float[] values=new float[2048]; int count;
