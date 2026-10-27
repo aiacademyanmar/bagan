@@ -49,7 +49,7 @@ class NativeARActivity:ComponentActivity() {
         onSessionFailed={error->issue=error.localizedMessage ?: "ARCore session failed"},
         onSessionUpdated={_,frame->
           if(anchor==null) {
-           anchor=frame.getUpdatedPlanes()
+           anchor=frame.getUpdatedTrackables(Plane::class.java)
              .firstOrNull {it.type==Plane.Type.HORIZONTAL_UPWARD_FACING}
              ?.createAnchor(it.centerPose)
           }
