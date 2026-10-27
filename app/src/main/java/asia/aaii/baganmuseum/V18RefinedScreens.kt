@@ -96,7 +96,7 @@ internal fun V18Home(items:List<V17Monument>,go:(String)->Unit,open:(Int)->Unit)
             Surface(onClick={open(index)},modifier=Modifier.weight(1f),color=paleIvory,
                 shape=RoundedCornerShape(14.dp),shadowElevation=1.dp){
                 Column(Modifier.padding(6.dp)){
-                    MonumentArtworkV19(item.slug,Modifier.fillMaxWidth().height(95.dp))
+                    V21HeritagePhoto(item,Modifier.fillMaxWidth().height(95.dp))
                     Spacer(Modifier.height(7.dp))
                     Text(item.mm,fontSize=10.sp,fontWeight=FontWeight.Bold,color=fineInk,maxLines=1)
                     Text(item.name,fontSize=9.sp,color=quietInk,maxLines=1,overflow=TextOverflow.Ellipsis)
@@ -126,7 +126,7 @@ private fun ListCard(item:V17Monument,index:Int,selected:Boolean,open:()->Unit,t
     Surface(onClick=open,modifier=Modifier.fillMaxWidth().padding(vertical=4.dp),color=paleIvory,
         shape=RoundedCornerShape(14.dp),shadowElevation=1.dp){
         Row(Modifier.padding(8.dp),verticalAlignment=Alignment.CenterVertically){
-            MonumentArtworkV19(item.slug,Modifier.size(width=90.dp,height=78.dp))
+            V21HeritagePhoto(item,Modifier.size(width=90.dp,height=78.dp))
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)){
                 Text(item.mm,color=fineInk,fontWeight=FontWeight.Bold,fontSize=13.sp,maxLines=1)
@@ -172,7 +172,7 @@ internal fun V18Gallery(items:List<V17Monument>,category:String,setCategory:(Str
 @Composable
 internal fun V18Detail(item:V17Monument,index:Int,saved:Boolean,toggle:()->Unit,go:(String)->Unit){
     val ctx=LocalContext.current
-    MonumentArtworkV19(item.slug,Modifier.fillMaxWidth().height(235.dp),caption=true)
+    V21HeritagePhoto(item,Modifier.fillMaxWidth().height(235.dp),showLabel=true)
     Spacer(Modifier.height(12.dp))
     Row(verticalAlignment=Alignment.CenterVertically){
         Column(Modifier.weight(1f)){
@@ -210,6 +210,7 @@ internal fun V18Detail(item:V17Monument,index:Int,saved:Boolean,toggle:()->Unit,
     }
     Text("Photos open online; maps search locations, and the 3D artworks are illustrative.",color=quietInk,fontSize=11.sp)
     V20HeritageDetail(item)
+    V21CommonsLicense(item)
 
 }
 @Composable

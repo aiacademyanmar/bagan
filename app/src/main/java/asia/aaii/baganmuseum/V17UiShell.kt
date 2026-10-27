@@ -267,7 +267,7 @@ fun MuseumUiV17(){
                                 onArtifact={go("Collections")})
                         }
                         "Museum Map" -> V20MapDirectory(monuments){i->chosen=i;go("Monument Detail")}
-                        "Heritage Photos" -> V20PhotoGallery(monuments){i->chosen=i;go("Monument Detail")}
+                        "Heritage Photos" -> V21PhotoGallery(monuments){i->chosen=i;go("Monument Detail")}
                         "Collections" -> V17Collections {i->artifactIndex=i;go("Artifact Detail")}
                         "Artifact Detail" -> V17Artifact(artifactIndex,{destination->go(destination)})
                         "History Timeline" -> V17History()
@@ -283,7 +283,7 @@ fun MuseumUiV17(){
                                 quizIndex=0;quizSelection=-1;quizScore=0;quizDone=false
                             },go={destination->go(destination)})
                         "Favorites" -> V17Favorites(monuments,favorites,{i->chosen=i;go("Monument Detail")})
-                        "Audio Guide" -> V17DarkPanel{V18AudioGuide()}
+                        "Audio Guide" -> V17DarkPanel{V21MonumentAudio(monuments,chosen){i->chosen=i}}
                         "Search" -> V17Search(monuments,search,{search=it},{i->chosen=i;go("Monument Detail")})
                         "Settings" -> V17Settings(lang,{lang=it;prefs.edit().putString("lang",it).apply()},
                             autoVoice,{autoVoice=it;prefs.edit().putBoolean("autoVoice",it).apply()},

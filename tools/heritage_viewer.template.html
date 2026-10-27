@@ -9,23 +9,30 @@ h3{margin:0 0 3px;font-size:17px;color:#f0bb70}
 nav button{flex:none;background:#473025;border:1px solid #69503e;border-radius:9px;padding:8px 10px;color:#ead4b5;font-size:11px}
 nav button.sel{background:#b17a48;color:#1c130d;font-weight:bold;border-color:#f8c180}
 canvas{display:block;width:100%;height:298px;touch-action:none;background:#23160f}
+.viewer-wrap{position:relative;height:298px;overflow:hidden}
+.hotspot-layer{position:absolute;inset:0;pointer-events:none}
+.hotspot-marker{position:absolute;pointer-events:auto;min-width:34px;height:34px;border-radius:50%;
+ border:2px solid #fff2bf;background:#b9812c;color:#21140a;font-size:18px;font-weight:bold;
+ box-shadow:0 2px 12px #0009;transform:translate(-50%,-50%);touch-action:manipulation;z-index:2}
+#hotspot-info{display:none;margin-top:7px;background:#4c3322;border:1px solid #997344;border-radius:10px;padding:10px;color:#ffe6b7;line-height:1.5}
+#hotspot-info.show{display:block}
 .controls{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:7px 9px;background:#291b14}
 .controls button{flex:1;border:1px solid #806044;background:#463025;border-radius:8px;padding:9px 4px;color:#ffe2ba}
 section{padding:10px 13px}#desc{line-height:1.6;color:#e3cbaa;margin:6px 0}
 strong{color:#f3bd69}
 .note{font-size:11px;color:#c5ab88;background:#2c1f17;border-radius:8px;padding:8px;margin-top:8px}
 </style></head><body>
-<header><h3>BAGAN HERITAGE • 10 OFFLINE 3D STUDIES</h3><div class="mini">Native Museum V1.6 • Illustrative geometry, not converted Blender scenes</div></header>
+<header><h3>BAGAN HERITAGE • 10 OFFLINE 3D STUDIES</h3><div class="mini">Native Museum V2.1 • Tap numbered 3D hotspots • Illustrative geometry</div></header>
 <nav id="items"></nav>
-<canvas id="view"></canvas>
+<div class="viewer-wrap"><canvas id="view"></canvas><div id="hotspot-layer" class="hotspot-layer"></div></div>
 <div class="controls"><button onclick="stepModel(-1)">‹ Previous</button><button onclick="resetView()">⟳ Reset</button><button onclick="stepModel(1)">Next ›</button><button onclick="zoom(.7)">＋</button><button onclick="zoom(1.3)">－</button></div>
-<section><strong id="title"></strong><div id="desc"></div><div class="note" id="notice"></div></section>
+<section><strong id="title"></strong><div id="desc"></div><div id="hotspot-info" aria-live="polite"></div><div class="note" id="notice"></div></section>
 <script>
 'use strict';
 const DATA=__HERITAGE_MODEL_DATA__;
 const canvas=document.getElementById('view'),notice=document.getElementById('notice');
 const gl=canvas.getContext('webgl',{antialias:true,alpha:false});
-let current=0,parts=[],yaw=.44,pitch=.27,distance=20,center=[0,3,0],pointerDown=false,lastX=0,lastY=0,pinch=0;
+let current=0,parts=[],bounds=null,hotspots=[],hotspotButtons=[],yaw=.44,pitch=.27,distance=20,center=[0,3,0],pointerDown=false,lastX=0,lastY=0,pinch=0;
 if(!gl){notice.textContent='WebGL not supported on this Android device';}
 function shader(kind,text){
  const s=gl.createShader(kind);gl.shaderSource(s,text);gl.compileShader(s);
@@ -65,24 +72,93 @@ function parseGLB(b64){
  }
  if(!js||!bin)throw Error('Incomplete GLB');
  const rendered=[];
+ let xyzMin=[Infinity,Infinity,Infinity],xyzMax=[-Infinity,-Infinity,-Infinity];
  for(let item of js.meshes[0].primitives){
   let pos=arr(js,bin,item.attributes.POSITION),normal=arr(js,bin,item.attributes.NORMAL),ind=arr(js,bin,item.indices);
+  for(let i=0;i<pos.length;i+=3){for(let k=0;k<3;k++){
+   xyzMin[k]=Math.min(xyzMin[k],pos[i+k]);xyzMax[k]=Math.max(xyzMax[k],pos[i+k]);
+  }}
   let color=js.materials[item.material].pbrMetallicRoughness.baseColorFactor;
   rendered.push({pos:buffer(gl.ARRAY_BUFFER,pos),normal:buffer(gl.ARRAY_BUFFER,normal),
     indices:buffer(gl.ELEMENT_ARRAY_BUFFER,ind),count:ind.length,color});
  }
+ bounds={min:xyzMin,max:xyzMax};
  return rendered;
+}
+const topicByCategory={
+ Temple:[
+  ['Roof & Spire','The upper tier and spire are illustrative references to Bagan temple silhouettes.'],
+  ['Brick Structure','Observe the massing, openings and conceptual layered brick construction.'],
+  ['Heritage Base','Conservation of foundations and historical masonry is essential.']
+ ],
+ Pagoda:[
+  ['Stupa Finial','The spire illustrates a pagoda-inspired ornamental form.'],
+  ['Stupa Body','Explore the layered, rounded concept monument profile.'],
+  ['Platform','Base platforms anchor the concept stupa composition.']
+ ],
+ Gate:[
+  ['Roofline','The decorative roofline is a conceptual gateway architectural element.'],
+  ['Gateway Arch','The central arched passage illustrates architectural access and enclosure.'],
+  ['Foundation','The brick-base representation is not a measured archaeological site.']
+ ],
+ Inscription:[
+  ['Upper Inscription','The upper carved surface is an educational tablet concept.'],
+  ['Text Surface','Decorative strokes are not an authentic transcription or scan.'],
+  ['Display Plinth','The model base represents a museum display support.']
+ ]
+};
+function buildHotspots(){
+ document.getElementById('hotspot-info').classList.remove('show');
+ const layer=document.getElementById('hotspot-layer');layer.textContent='';
+ hotspotButtons=[];hotspots=[];
+ if(!bounds)return;
+ const mn=bounds.min,mx=bounds.max;
+ const x=(mn[0]+mx[0])/2, y0=mn[1],height=mx[1]-mn[1],z=mx[2];
+ const w=mx[0]-mn[0];
+ const positions=[[x,y0+height*.84,(mn[2]+mx[2])/2],
+   [x+w*.13,y0+height*.49,z],
+   [x-w*.11,y0+height*.13,z]];
+ const notes=topicByCategory[DATA[current].category]||topicByCategory.Temple;
+ notes.forEach((pair,i)=>{
+  let b=document.createElement('button');
+  b.className='hotspot-marker';b.type='button';b.textContent=(i+1).toString();
+  b.setAttribute('aria-label',pair[0]);
+  b.onclick=(event)=>{
+   event.preventDefault();event.stopPropagation();
+   const el=document.getElementById('hotspot-info');
+   el.textContent=DATA[current].name+' • '+pair[0]+' — '+pair[1];
+   el.classList.add('show');
+  };
+  layer.appendChild(b);hotspotButtons.push(b);
+  hotspots.push(positions[i]);
+ });
+}
+function updateHotspots(m){
+ if(!bounds)return;
+ const cw=canvas.clientWidth,ch=canvas.clientHeight;
+ hotspots.forEach((p,i)=>{
+  const x=p[0],y=p[1],z=p[2];
+  const tx=m[0]*x+m[4]*y+m[8]*z+m[12],ty=m[1]*x+m[5]*y+m[9]*z+m[13];
+  const w=m[3]*x+m[7]*y+m[11]*z+m[15];
+  const button=hotspotButtons[i];
+  if(w<=.01){button.style.display='none';return;}
+  const nx=tx/w,ny=ty/w;
+  if(Math.abs(nx)>1.05||Math.abs(ny)>1.05){button.style.display='none';return;}
+  button.style.display='block';
+  button.style.left=((nx+1)*cw*.5)+'px';
+  button.style.top=((1-ny)*ch*.5)+'px';
+ });
 }
 function showMonument(index){
  index=(index+DATA.length)%DATA.length;
  current=index;const item=DATA[current];
  document.getElementById('title').textContent=item.myanmar+' • '+item.name;
  document.getElementById('desc').textContent=item.description;
- document.getElementById('notice').textContent='Offline ORIGINAL CONCEPT GLB — not yet exported from the linked Drive Blender project. Use the Drive Library screen to access the original source.';
+ document.getElementById('notice').textContent='Offline 3D with 3 clickable model-anchored learning points — not yet exported from the linked Drive Blender project. Use the Drive Library screen to access the original source.';
  document.querySelectorAll('nav button').forEach((b,i)=>b.classList.toggle('sel',i===current));
  if(!gl)return;
  parts.forEach(p=>{gl.deleteBuffer(p.pos);gl.deleteBuffer(p.normal);gl.deleteBuffer(p.indices)});
- try{parts=parseGLB(item.glb)}catch(e){parts=[];notice.textContent='3D loading error: '+e.message}
+ try{parts=parseGLB(item.glb);buildHotspots()}catch(e){parts=[];bounds=null;document.getElementById("hotspot-layer").textContent="";notice.textContent='3D loading error: '+e.message}
  yaw=.45;pitch=.25;center=[0,3.0,0];
  distance=item.category==='Temple'?30:(item.category==='Gate'?22:(item.category==='Inscription'?13:20));
 }
@@ -109,7 +185,9 @@ function render(){
  gl.viewport(0,0,w,h);gl.clearColor(.09,.055,.038,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);
  const eye=[center[0]+distance*Math.sin(yaw)*Math.cos(pitch),center[1]+distance*Math.sin(pitch),center[2]+distance*Math.cos(yaw)*Math.cos(pitch)];
- gl.useProgram(pr);gl.uniformMatrix4fv(uMvp,false,multiply(perspective(w/Math.max(h,1)),lookAt(eye,center)));
+ const matrix=multiply(perspective(w/Math.max(h,1)),lookAt(eye,center));
+ gl.useProgram(pr);gl.uniformMatrix4fv(uMvp,false,matrix);
+ updateHotspots(matrix);
  gl.enableVertexAttribArray(attrPos);gl.enableVertexAttribArray(attrNorm);
  for(let p of parts){
   gl.bindBuffer(gl.ARRAY_BUFFER,p.pos);gl.vertexAttribPointer(attrPos,3,gl.FLOAT,false,0,0);
