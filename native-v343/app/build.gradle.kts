@@ -5,7 +5,7 @@ plugins {
 }
 android {
   namespace = "asia.aaii.bagan"
-  compileSdk = 37
+  compileSdk = 36
   defaultConfig {
     applicationId = "asia.aaii.bagan.museum"
     minSdk = 26
@@ -27,5 +27,5 @@ dependencies {
   implementation("androidx.compose.ui:ui")
   implementation("androidx.compose.foundation:foundation")
   implementation("androidx.compose.material3:material3")
-  implementation("io.github.sceneview:sceneview:4.37.0")
+  implementation("io.github.sceneview:sceneview:4.34.0")
 }
