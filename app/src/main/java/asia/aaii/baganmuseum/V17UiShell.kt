@@ -253,12 +253,12 @@ fun MuseumUiV17(){
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(horizontal=14.dp,vertical=12.dp)){
                     when(current){
-                        "Home" -> V17Home(monuments,go,{chosen=it;go("Monument Detail")})
+                        "Home" -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                         "Gallery" -> V17Gallery(monuments,category,{category=it},search,{search=it},
                             favorites,{i->chosen=i;go("Monument Detail")},{id->saveFavorite(id)})
                         "Monument Detail" -> V17Detail(monuments[chosen],chosen,
                             monuments[chosen].slug in favorites,
-                            {saveFavorite(monuments[chosen].slug)},go)
+                            {saveFavorite(monuments[chosen].slug)},{destination->go(destination)})
                         "Heritage 3D" -> V17DarkPanel { HeritageOffline3DV16(chosen) }
                         "3D Viewer" -> V17DarkPanel { HeritageOffline3DV16(chosen) }
                         "AR View" -> V17AR(go)
@@ -268,7 +268,7 @@ fun MuseumUiV17(){
                         }
                         "Museum Map" -> V17Map(go)
                         "Collections" -> V17Collections {i->artifactIndex=i;go("Artifact Detail")}
-                        "Artifact Detail" -> V17Artifact(artifactIndex,go)
+                        "Artifact Detail" -> V17Artifact(artifactIndex,{destination->go(destination)})
                         "History Timeline" -> V17History()
                         "Quiz" -> V17Quiz(quizIndex,quizSelection,quizScore,quizDone,
                             select={quizSelection=it},next={correct->
@@ -280,19 +280,19 @@ fun MuseumUiV17(){
                                 quizSelection=-1
                             },restart={
                                 quizIndex=0;quizSelection=-1;quizScore=0;quizDone=false
-                            },go=::go)
+                            },go={destination->go(destination)})
                         "Favorites" -> V17Favorites(monuments,favorites,{i->chosen=i;go("Monument Detail")})
                         "Audio Guide" -> V17DarkPanel{NativeGuideScreen()}
                         "Search" -> V17Search(monuments,search,{search=it},{i->chosen=i;go("Monument Detail")})
                         "Settings" -> V17Settings(lang,{lang=it;prefs.edit().putString("lang",it).apply()},
                             autoVoice,{autoVoice=it;prefs.edit().putBoolean("autoVoice",it).apply()},
-                            chosenTheme,{chosenTheme=it;prefs.edit().putString("theme",it).apply()},go)
+                            chosenTheme,{chosenTheme=it;prefs.edit().putString("theme",it).apply()},{destination->go(destination)})
                         "Profile" -> V17Profile(visitor,{visitor=it;prefs.edit().putString("visitor",it).apply()},
-                            favorites.size,prefs.getInt("best",0),go)
-                        "Certificate" -> V17Certificate(visitor,prefs.getInt("best",0),go)
+                            favorites.size,prefs.getInt("best",0),{destination->go(destination)})
+                        "Certificate" -> V17Certificate(visitor,prefs.getInt("best",0),{destination->go(destination)})
                         "Menu" -> V17Menu(go)
                         "Offline Learning" -> V17Offline(go)
-                        else -> V17Home(monuments,go,{chosen=it;go("Monument Detail")})
+                        else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
                 }
@@ -318,7 +318,7 @@ fun MuseumUiV17(){
                     }
                 }
             }
-            V17Bottom(current,::go)
+            V17Bottom(current,{destination->go(destination)})
         }
     }
 }
