@@ -54,6 +54,16 @@ object ModelRepository {
         if (version != 2 || declared != file.length())
             throw IOException("GLB version or length mismatch")
     }
+    fun demo(context: Context): File {
+        val file = File(context.filesDir, "bagan_demo_pagoda.glb")
+        if (!file.exists()) {
+            context.assets.open("models/demo_pagoda.glb").use { input ->
+                file.outputStream().use { output -> input.copyTo(output) }
+            }
+        }
+        validate(file)
+        return file
+    }
     fun download(context: Context, item: Temple, progress: (Int) -> Unit): File {
         val saved = cached(context, item)
         if (saved.exists()) {
