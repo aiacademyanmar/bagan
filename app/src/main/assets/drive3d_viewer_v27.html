@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>body{margin:0;background:#21170f;color:#efd7ac;font:13px sans-serif}#v{width:100%;height:400px;touch-action:none}#info{padding:7px}</style></head><body><canvas id="v"></canvas><div id="info">Loading 3D model…</div><script>
+const canvas=document.querySelector('#v'),status=document.querySelector('#info');const gl=canvas.getContext('webgl',{antialias:false});let yaw=.4,pitch=.2,zoom=1,geometries=[],pointer=false,lx=0,ly=0,rootCenter=[0,0,0],radius=1;
+const qs=new URLSearchParams(location.search),filename=qs.get('model');if(!/^[A-Za-z0-9_]+\.glb$/.test(filename||''))throw Error('Bad model');
+function matMul(a,b){const r=new Float32Array(16);for(let j=0;j<4;j++)for(let i=0;i<4;i++)for(let k=0;k<4;k++)r[j*4+i]+=a[k*4+i]*b[j*4+k];return r;}
+const identity=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+function nodeMatrix(n){if(n.matrix)return new Float32Array(n.matrix);let o=identity(),q=n.rotation||[0,0,0,1],t=n.translation||[0,0,0],s=n.scale||[1,1,1],x=q[0],y=q[1],z=q[2],w=q[3];
+o[0]=(1-2*(y*y+z*z))*s[0];o[1]=(2*(x*y+z*w))*s[0];o[2]=(2*(x*z-y*w))*s[0];o[4]=(2*(x*y-z*w))*s[1];o[5]=(1-2*(x*x+z*z))*s[1];o[6]=(2*(y*z+x*w))*s[1];o[8]=(2*(x*z+y*w))*s[2];o[9]=(2*(y*z-x*w))*s[2];o[10]=(1-2*(x*x+y*y))*s[2];o[12]=t[0];o[13]=t[1];o[14]=t[2];return o;}
+const vert='attribute vec3 p;uniform mat4 mvp;void main(){gl_Position=mvp*vec4(p,1.);}';
+const frag='precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}';
+function shader(type,source){let s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+let program,attr,uni,clr;
+if(gl){program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vert));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(program);attr=gl.getAttribLocation(program,'p');uni=gl.getUniformLocation(program,'mvp');clr=gl.getUniformLocation(program,'c');}
+function look(eye){let f=[-eye[0],-eye[1],-eye[2]],len=Math.hypot(...f)||1;f=f.map(v=>v/len);let r=[f[2],0,-f[0]],l=Math.hypot(...r)||1;r=r.map(v=>v/l);let u=[r[1]*f[2]-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]-r[1]*f[0]];return new Float32Array([r[0],u[0],-f[0],0,r[1],u[1],-f[1],0,r[2],u[2],-f[2],0,0,0,-Math.hypot(...eye),1]);}
+function projection(aspect){let f=2.4,n=.1,F=100;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(F+n)/(n-F),-1,0,0,2*F*n/(n-F),0]);}
+async function start(){try{
+const response=await fetch('https://appassets.androidplatform.net/drive3d/models/'+filename);if(!response.ok)throw Error('GLB not imported');const ab=await response.arrayBuffer(),d=new DataView(ab);if(d.getUint32(0,true)!==0x46546c67)throw Error('Invalid GLB');let offset=12,json=null,bin=null;
+while(offset<ab.byteLength){let length=d.getUint32(offset,true),type=d.getUint32(offset+4,true);offset+=8;if(type===0x4e4f534a)json=JSON.parse(new TextDecoder().decode(new Uint8Array(ab,offset,length)));if(type===0x004e4942)bin=offset;offset+=length;}
+if(!json||bin===null)throw Error('Invalid GLB chunks');
+const access=i=>{let a=json.accessors[i],v=json.bufferViews[a.bufferView];return{a,offset:bin+(v.byteOffset||0)+(a.byteOffset||0),stride:v.byteStride||0}};
+const vertices=i=>{let {a,offset,stride}=access(i),d2=new DataView(ab),n=a.count,out=new Float32Array(n*3),step=stride||12;for(let j=0;j<n;j++)for(let k=0;k<3;k++)out[j*3+k]=d2.getFloat32(offset+j*step+k*4,true);return out};
+const indices=i=>{let {a,offset,stride}=access(i),out=new Uint32Array(a.count),step=stride||(a.componentType===5125?4:a.componentType===5123?2:1);for(let j=0;j<a.count;j++){out[j]=a.componentType===5125?d.getUint32(offset+j*step,true):a.componentType===5123?d.getUint16(offset+j*step,true):d.getUint8(offset+j*step);}return out};
+let lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity],count=0;
+const roots=json.scenes?.[json.scene||0]?.nodes||json.nodes.map((_,i)=>i);
+const walk=(id,parent)=>{let node=json.nodes[id],world=matMul(parent,nodeMatrix(node));if(node.mesh!==undefined){for(const prim of json.meshes[node.mesh].primitives){if(prim.attributes.POSITION===undefined)continue;const pos=vertices(prim.attributes.POSITION),idx=prim.indices===undefined?Uint32Array.from({length:pos.length/3},(_,i)=>i):indices(prim.indices);let arr=[];
+for(let k=0;k<idx.length;k++){let p=idx[k]*3,x=pos[p],y=pos[p+1],z=pos[p+2];let xx=world[0]*x+world[4]*y+world[8]*z+world[12],yy=world[1]*x+world[5]*y+world[9]*z+world[13],zz=world[2]*x+world[6]*y+world[10]*z+world[14];arr.push(xx,yy,zz);lo=[Math.min(lo[0],xx),Math.min(lo[1],yy),Math.min(lo[2],zz)];hi=[Math.max(hi[0],xx),Math.max(hi[1],yy),Math.max(hi[2],zz)];}
+if(!arr.length)continue;count+=arr.length/3;if(count>2000000)throw Error('Model is too large for this preview');let b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW);let color=json.materials?.[prim.material||0]?.pbrMetallicRoughness?.baseColorFactor||[.75,.52,.30,1];geometries.push({buffer:b,count:arr.length/3,color,mode:prim.mode===1?gl.LINES:gl.TRIANGLES});}}
+for(const child of node.children||[])walk(child,world);};
+for(const root of roots)walk(root,identity());
+rootCenter=lo.map((v,i)=>(v+hi[i])/2);radius=Math.max(...lo.map((v,i)=>hi[i]-v),.1);status.textContent=filename+' • '+geometries.length+' mesh parts • rotate/zoom with fingers';render();
+}catch(e){status.textContent='3D preview unavailable: '+e.message;}}
+function render(){if(!gl)return;let w=canvas.clientWidth,h=canvas.clientHeight;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);gl.clearColor(.11,.07,.045,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.useProgram(program);
+let eye=[Math.sin(yaw)*3.2,Math.sin(pitch)*2.2,Math.cos(yaw)*3.2];let view=look(eye),p=projection(w/Math.max(h,1));let model=identity();let scale=1/(radius*zoom);model[0]=model[5]=model[10]=scale;model[12]=-rootCenter[0]*scale;model[13]=-rootCenter[1]*scale;model[14]=-rootCenter[2]*scale;let mvp=matMul(p,matMul(view,model));gl.uniformMatrix4fv(uni,false,mvp);gl.enableVertexAttribArray(attr);for(const g of geometries){gl.bindBuffer(gl.ARRAY_BUFFER,g.buffer);gl.vertexAttribPointer(attr,3,gl.FLOAT,false,0,0);gl.uniform4fv(clr,g.color);gl.drawArrays(g.mode,0,g.count);}}
+canvas.addEventListener('pointerdown',e=>{pointer=true;lx=e.clientX;ly=e.clientY});canvas.addEventListener('pointerup',()=>pointer=false);canvas.addEventListener('pointermove',e=>{if(pointer){yaw+=(e.clientX-lx)*.01;pitch=Math.max(-1.4,Math.min(1.4,pitch+(e.clientY-ly)*.01));lx=e.clientX;ly=e.clientY;render()}});canvas.addEventListener('wheel',e=>{zoom=Math.max(.2,Math.min(8,zoom*Math.exp(e.deltaY*.002)));render();e.preventDefault()},{passive:false});
+start();</script></body></html>

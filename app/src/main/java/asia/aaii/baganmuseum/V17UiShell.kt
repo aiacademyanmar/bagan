@@ -312,6 +312,7 @@ fun MuseumUiV17(){
                         "Learning Packages" -> V26OfflinePacks(monuments)
                         "3D Performance" -> V26PerformanceDashboard()
                         "Update Center" -> V26UpdateManager()
+                        "Drive 3D Models" -> V27Drive3DGallery()
                         else -> V17Home(monuments,{destination->go(destination)},{chosen=it;go("Monument Detail")})
                     }
                     Spacer(Modifier.height(12.dp))
@@ -326,7 +327,7 @@ fun MuseumUiV17(){
                             listOf("Home","Gallery","Heritage 3D","AR View","Museum Map",
                                 "Indoor Tour","Collections","Drive Library","Heritage Photos","History Timeline",
                                 "Audio Guide","Audio Dashboard","Quiz","Favorites","Offline Multimedia","Offline Learning",
-                                "Offline Photos","Museum Tour Progress","Samsung QA Checklist","Crash Diagnostics","Download Manager","Achievements","Recovery Settings","Learning Packages","3D Performance","Update Center","Profile","Certificate","Settings").forEach{label->
+                                "Offline Photos","Museum Tour Progress","Samsung QA Checklist","Crash Diagnostics","Download Manager","Achievements","Recovery Settings","Learning Packages","3D Performance","Update Center","Drive 3D Models","Profile","Certificate","Settings").forEach{label->
                                 TextButton(onClick={go(label)},modifier=Modifier.fillMaxWidth()){
                                     Text("✦  "+label,color=V17White,
                                         modifier=Modifier.fillMaxWidth(),fontSize=15.sp)

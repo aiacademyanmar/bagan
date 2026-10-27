@@ -9,8 +9,8 @@ android {
         applicationId = "asia.aaii.baganmuseum"
         minSdk = 26
         targetSdk = 36
-        versionCode = 17
-        versionName = "2.6.0"
+        versionCode = 18
+        versionName = "2.7.0"
     }
     buildFeatures { compose = true }
     compileOptions {
@@ -26,4 +26,5 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("com.google.ar:core:1.56.0")
     implementation("com.google.zxing:core:3.5.3")
+    implementation("androidx.webkit:webkit:1.14.0")
 }
