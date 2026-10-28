@@ -35,7 +35,7 @@ class MainActivity:ComponentActivity(){
   super.onCreate(savedInstanceState)
   val data=ModelRepository.catalog(this)
   setContent { MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=panel)){
-   Museum(data,{t->launchAr(t)},{t->launchMap(t)})
+   BaganHeritageApp(data,{t->launchMap(t)},{t->launchAr(t)},{text->android.widget.Toast.makeText(this,text,android.widget.Toast.LENGTH_LONG).show()})
   } }
  }
  private fun launchMap(t:Temple){
