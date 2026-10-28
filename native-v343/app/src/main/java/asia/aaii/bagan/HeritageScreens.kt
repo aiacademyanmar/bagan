@@ -400,14 +400,28 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   }
  }
 }
-@Composable private fun ModelScreen(t:Temple?,file:String?,demo:Boolean,ready:()->Unit,retry:()->Unit,demoClick:()->Unit,ar:()->Unit,back:()->Unit){
+@Composable private fun ModelScreen(
+ t:Temple?, file:String?, demo:Boolean, ready:()->Unit,
+ retry:()->Unit, demoClick:()->Unit, ar:()->Unit, back:()->Unit
+){
  var rendered by remember(file){mutableStateOf(false)}
  var timedOut by remember(file){mutableStateOf(false)}
+ var fallbackStarted by remember(file){mutableStateOf(false)}
+ // If a downloaded GLB fails to decode, return to a known, bundled asset.
  LaunchedEffect(file){
-  if(file!=null) {kotlinx.coroutines.delay(20000);if(!rendered)timedOut=true}
+  if(file!=null){
+   kotlinx.coroutines.delay(18000)
+   if(!rendered)timedOut=true
+  }
+ }
+ LaunchedEffect(timedOut, demo, file){
+  if(timedOut && !demo && !fallbackStarted){
+   fallbackStarted=true
+   demoClick()
+  }
  }
  Column(Modifier.fillMaxSize().background(Navy)){
-  Row(Modifier.padding(12.dp),verticalAlignment=Alignment.CenterVertically){
+  Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){
    TextButton(onClick=back){Text("‹ Back",color=Gold)}
    Text((t?.nameEn ?: "Demo")+" • 3D View",color=Color.White,fontWeight=FontWeight.Bold)
   }
@@ -415,35 +429,50 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    if(file!=null){
     key(file) {
      SceneView(modifier=Modifier.fillMaxSize()){
-      rememberModelInstance(modelLoader,file)?.let{inst->
-       ModelNode(modelInstance=inst,scaleToUnits=1.15f,autoAnimate=true,isEditable=true)
+      // IMPORTANT: SceneView's asset overload will not load an internal file:// GLB.
+      // File locations must use the fileLocation overload. Bundled demo uses assets.
+      val instance=if(file.startsWith("file:") || file.startsWith("content:") ||
+                      file.startsWith("https:") || file.startsWith("http:")){
+       rememberModelInstance(modelLoader=modelLoader,fileLocation=file)
+      }else{
+       rememberModelInstance(modelLoader=modelLoader,assetFileLocation=file)
+      }
+      instance?.let{inst->
+       ModelNode(modelInstance=inst,scaleToUnits=1.0f,autoAnimate=true,isEditable=true)
        LaunchedEffect(inst){rendered=true;ready()}
       }
      }
     }
    }
    if(!rendered){
-    Column(Modifier.align(Alignment.Center).padding(15.dp),horizontalAlignment=Alignment.CenterHorizontally){
+    Column(Modifier.align(Alignment.Center).padding(16.dp),horizontalAlignment=Alignment.CenterHorizontally){
      CircularProgressIndicator(color=Gold)
      Spacer(Modifier.height(12.dp))
-     Text(if(timedOut)"3D renderer not ready" else "Preparing Native 3D…",color=Color.White)
+     Text(if(timedOut)"3D model could not be loaded" else "Preparing 3D model…",color=Color.White)
      if(timedOut){
-      Text("GLB model could not be rendered on this device.",color=Color.White,fontSize=12.sp)
+      Spacer(Modifier.height(8.dp))
+      Text(
+       if(demo)"The bundled 3D demo could not load. Use Retry or view the temple details."
+       else "Trying the bundled offline 3D demo…",
+       color=Color.White,fontSize=12.sp,textAlign=TextAlign.Center
+      )
       Spacer(Modifier.height(8.dp))
       GButton("Try Offline Demo",demoClick)
      }
     }
    }
-   if(demo)Text("OFFLINE DEMO — not the actual temple model",color=Gold,fontSize=10.sp,
-     modifier=Modifier.align(Alignment.BottomCenter).background(Navy).padding(9.dp))
+   if(demo)Text("OFFLINE DEMO — not the original monument model",
+     color=Gold,fontSize=11.sp,modifier=Modifier.align(Alignment.BottomCenter)
+       .background(Navy).padding(10.dp))
   }
-  Row(Modifier.fillMaxWidth().padding(10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
-   Outline("‹ Guide",back,Modifier.weight(1f))
+  Row(Modifier.fillMaxWidth().padding(10.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+   // The previous outlined Back button used dark text on a dark background.
+   GButton("‹ Back",back,Modifier.weight(1f))
    GButton("↻ Retry",retry,Modifier.weight(1f))
-   GButton("▣ AR Camera",ar,Modifier.weight(1f))
+   GButton("AR Camera",ar,Modifier.weight(1f))
   }
   Text("Drag to rotate  •  Pinch to zoom  •  GLB 3D",color=Color.White,fontSize=12.sp,
-    modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=12.dp))
+   modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=12.dp))
  }
 }
 @Composable private fun ArInstructions(t:Temple?,onStart:()->Unit,onBack:()->Unit,onModel:()->Unit){
