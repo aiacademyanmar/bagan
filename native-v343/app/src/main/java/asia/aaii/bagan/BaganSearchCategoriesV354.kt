@@ -80,7 +80,7 @@ fun V354Categories(
          Spacer(Modifier.width(14.dp))
          Column(Modifier.weight(1f)){
            Text(name,fontWeight=FontWeight.Bold,color=BaganBrown)
-           Text("$count records",fontSize=12.sp,color=Color.Gray)
+           Text("$count ခု",fontSize=12.sp,color=Color.Gray)
          }
          Text("›",fontSize=25.sp,color=BaganGold)
        }
