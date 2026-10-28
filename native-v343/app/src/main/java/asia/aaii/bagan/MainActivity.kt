@@ -1,260 +1,206 @@
 package asia.aaii.bagan
+
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import java.util.Locale
-import com.google.ar.core.ArCoreApk
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import io.github.sceneview.SceneView
-import io.github.sceneview.node.ModelNode
-import io.github.sceneview.rememberModelInstance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.google.ar.core.ArCoreApk
 import java.io.File
+import java.util.Locale
 
-private val night=Color(0xFF151C30)
-private val gold=Color(0xFFECC276)
-private val panel=Color(0xFF29354B)
+/**
+ * Recovery-first Android entrypoint for Samsung and other Android devices.
+ * Heavy 3D/AR code is entered only on user request, never during startup.
+ * Fatal crash details are saved privately on-device for the next launch.
+ */
+class MainActivity : ComponentActivity() {
+    private var speech: TextToSpeech? = null
+    private var speechReady = false
+    private val crashPrefName = "bagan_crash_report_v367"
 
-class MainActivity:ComponentActivity(){
- private var speech: TextToSpeech? = null
- private var speechReady = false
- override fun onCreate(savedInstanceState:Bundle?){
-  super.onCreate(savedInstanceState)
-  speech = TextToSpeech(this) { status ->
-   speechReady = status == TextToSpeech.SUCCESS
-   if(speechReady) speech?.language = Locale.US
-  }
-  val data=ModelRepository.catalog(this)
-  setContent { MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=panel)){
-   BaganEntryFlow(data,{t->launchMap(t)},{t->launchAr(t)},{text->speakGuide(text)})
-  } }
- }
- private fun speakGuide(text:String){
-  if(speechReady) speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "bagan-guide")
-  else android.widget.Toast.makeText(this,"Text-to-Speech engine not ready. Check Android TTS settings.",android.widget.Toast.LENGTH_LONG).show()
- }
- override fun onDestroy(){
-  speech?.stop()
-  speech?.shutdown()
-  speech = null
-  super.onDestroy()
- }
- private fun launchMap(t:Temple){
-  val uri=Uri.parse("https://www.google.com/maps/search/?api=1&query="+Uri.encode(t.nameEn+" Bagan Myanmar"))
-  try { startActivity(Intent(Intent.ACTION_VIEW,uri)) }
-  catch(e:Exception){android.widget.Toast.makeText(this,"Map app unavailable",1).show()}
- }
- private fun launchAr(t:Temple){
-  val availability=try { ArCoreApk.getInstance().checkAvailability(this) }
-    catch(e:Exception){null}
-  if(availability?.isSupported != true){
-    AlertDialog.Builder(this).setTitle("ARCore Support Check")
-      .setMessage(if(availability?.isTransient==true)
-        "ARCore availability is still being checked. Tap AR again shortly."
-       else "This phone may not support Google Play Services for AR. You can use the Native 3D Viewer instead. Status: $availability")
-      .setPositiveButton("OK",null).show()
-    return
-  }
-  val modelFile=ModelRepository.cached(this,t)
-  val actual=try {ModelRepository.validate(modelFile);true}catch(_:Exception){false}
-  val source=if(actual)modelFile else try {ModelRepository.demo(this)} catch(e:Exception){
-    AlertDialog.Builder(this).setTitle("AR Model Error").setMessage(e.localizedMessage?:"No usable GLB")
-      .setPositiveButton("OK",null).show()
-    return
-  }
-  fun openModel(){
-    try {
-      startActivity(Intent(this,NativeARActivity::class.java)
-        .putExtra("file_uri",Uri.fromFile(source).toString())
-        .putExtra("model_name",if(actual)t.nameMm else "Bagan Demo Pagoda")
-        .putExtra("demo_mode",!actual))
-    }catch(e:Exception){
-      AlertDialog.Builder(this).setTitle("AR Error")
-        .setMessage(e.localizedMessage?:"AR camera cannot start")
-        .setPositiveButton("OK",null).show()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        installCrashLogger()
+        super.onCreate(savedInstanceState)
+
+        val crashStore = getSharedPreferences(crashPrefName, Context.MODE_PRIVATE)
+        val previousCrash = crashStore.getString("last_error", null)
+        val dataResult = runCatching { ModelRepository.catalog(this) }
+        val catalogError = dataResult.exceptionOrNull()?.let {
+            "Catalog load error: ${it.javaClass.simpleName}: ${it.message}"
+        }
+        val temples = dataResult.getOrElse { emptyList() }
+
+        setContent {
+            MaterialTheme {
+                var showRecovery by rememberSaveable { mutableStateOf(previousCrash != null || catalogError != null || temples.isEmpty()) }
+                var safeMode by rememberSaveable { mutableStateOf(false) }
+                val message = catalogError ?: previousCrash ?: "No temple records were found."
+                when {
+                    safeMode -> BaganSafeMode(temples, onMap = ::launchMap, onExitSafe = { safeMode = false; showRecovery = false })
+                    showRecovery -> BaganRecoveryScreen(
+                        message = message,
+                        onRetry = {
+                            crashStore.edit().remove("last_error").apply()
+                            showRecovery = false
+                        },
+                        onSafeMode = { safeMode = true }
+                    )
+                    temples.isEmpty() -> BaganRecoveryScreen(
+                        message = "Catalog is empty. Please reinstall the APK.",
+                        onRetry = { showRecovery = true },
+                        onSafeMode = { safeMode = true }
+                    )
+                    else -> BaganEntryFlow(temples, ::launchMap, ::launchAr, ::speakGuide)
+                }
+            }
+        }
     }
-  }
-  if(actual)openModel()
-  else AlertDialog.Builder(this).setTitle("Offline Demo AR")
-    .setMessage("The original ${t.nameEn} GLB is not downloaded. Open AR using the bundled DEMO pagoda instead? The demo is not a scan of the real temple.")
-    .setPositiveButton("Demo AR"){_,_->openModel()}
-    .setNegativeButton("Cancel",null).show()
- }
 
+    private fun installCrashLogger() {
+        val earlier = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+            try {
+                val stack = Log.getStackTraceString(error).take(10000)
+                getSharedPreferences(crashPrefName, Context.MODE_PRIVATE)
+                    .edit().putString("last_error", stack).commit()
+                Log.e("BaganNative", "Uncaught error: ${error.javaClass.simpleName}", error)
+            } catch (_: Throwable) {
+                // Always hand control back to Android's crash handler.
+            }
+            if (earlier != null) earlier.uncaughtException(thread, error)
+            else android.os.Process.killProcess(android.os.Process.myPid())
+        }
+    }
+
+    private fun speakGuide(text: String) {
+        try {
+            if (speech == null) {
+                speech = TextToSpeech(this) { status ->
+                    speechReady = status == TextToSpeech.SUCCESS
+                    if (speechReady) speech?.language = Locale.US
+                }
+                Toast.makeText(this, "အသံဖတ်စနစ်ကို စတင်နေပါသည်။ ထပ်နှိပ်ပါ။", Toast.LENGTH_SHORT).show()
+            } else if (speechReady) {
+                speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "bagan-guide")
+            } else {
+                Toast.makeText(this, "Text-to-Speech မရနိုင်သေးပါ။", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Audio မရနိုင်ပါ: ${e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onDestroy() {
+        runCatching {
+            speech?.stop()
+            speech?.shutdown()
+            speech = null
+        }
+        super.onDestroy()
+    }
+
+    private fun launchMap(t: Temple) {
+        val url = "https://www.google.com/maps/search/?api=1&query=" + Uri.encode(t.nameEn + " Bagan Myanmar")
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (e: Exception) {
+            Toast.makeText(this, "မြေပုံကို ယခုဖွင့်မရနိုင်ပါ။", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun launchAr(t: Temple) {
+        val available = try { ArCoreApk.getInstance().checkAvailability(this) }
+            catch (e: Exception) { null }
+        if (available?.isSupported != true) {
+            AlertDialog.Builder(this)
+                .setTitle("AR Camera")
+                .setMessage("ဤ Samsung ဖုန်းတွင် ARCore မရနိုင်သေးပါ။ 3D Viewer ကို အသုံးပြုနိုင်ပါသည်။")
+                .setPositiveButton("OK", null).show()
+            return
+        }
+        val cached = ModelRepository.cached(this, t)
+        val actual = try { ModelRepository.validate(cached); true } catch (_: Exception) { false }
+        val source = if (actual) cached else try { ModelRepository.demo(this) } catch (e: Exception) {
+            AlertDialog.Builder(this).setTitle("3D File Error")
+                .setMessage(e.localizedMessage ?: "GLB file unavailable")
+                .setPositiveButton("OK", null).show()
+            return
+        }
+        val open = {
+            try {
+                startActivity(Intent(this, NativeARActivity::class.java)
+                    .putExtra("file_uri", Uri.fromFile(source).toString())
+                    .putExtra("model_name", if (actual) t.nameMm else "Bagan Demo Pagoda")
+                    .putExtra("demo_mode", !actual))
+            } catch (e: Exception) {
+                AlertDialog.Builder(this).setTitle("AR Camera Error")
+                    .setMessage(e.localizedMessage ?: "AR Camera unavailable")
+                    .setPositiveButton("OK", null).show()
+            }
+        }
+        if (actual) open() else AlertDialog.Builder(this)
+            .setTitle("Demo 3D")
+            .setMessage("မူရင်း GLB ဖိုင်မရှိသေးပါ။ နမူနာပုံစံဖြင့် AR ကြည့်မလား။")
+            .setPositiveButton("ဖွင့်ရန်") { _, _ -> open() }
+            .setNegativeButton("မဖွင့်ပါ", null).show()
+    }
 }
+
 @Composable
-private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
- val context=LocalContext.current
- val prefs=remember{context.getSharedPreferences("bagan_saved",0)}
- var favorites by remember{mutableStateOf(prefs.getStringSet("ids",emptySet())!!.toSet())}
- var page by remember{mutableStateOf("home")}
- var current by remember{mutableStateOf<Temple?>(null)}
- var search by remember{mutableStateOf("")}
- fun open(t:Temple){current=t;page="viewer"}
- fun save(t:Temple){favorites=if(t.id in favorites)favorites-t.id else favorites+t.id;prefs.edit().putStringSet("ids",favorites).apply()}
- Column(Modifier.fillMaxSize().background(night)){
-  Row(Modifier.fillMaxWidth().background(panel).padding(14.dp),verticalAlignment=Alignment.CenterVertically){
-   Text("🏛",fontSize=26.sp); Spacer(Modifier.width(9.dp))
-   Column{Text("BAGAN HERITAGE MUSEUM",color=gold,fontWeight=FontWeight.Bold,fontSize=18.sp)
-     Text("History • Guide • Map • 3D • AR | V3.4.5",fontSize=11.sp,color=Color.White)}
-  }
-  Row(Modifier.fillMaxWidth().background(panel).horizontalScroll(rememberScrollState()).padding(horizontal=6.dp,vertical=4.dp),
-    horizontalArrangement=Arrangement.spacedBy(4.dp)){
-   listOf("home" to "🏠 Home","guide" to "🏛 Guide/3D","maps" to "🗺 Map","saved" to "★ Saved","more" to "☰ More").forEach{(id,name)->
-    val active=page==id||(page=="viewer"&&id=="guide")
-    TextButton(onClick={page=id;current=null}){Text(name,color=if(active)gold else Color.White,fontSize=12.sp)}
-   }
-  }
-  if(page=="viewer" && current!=null){
-   ModelPage(current!!,{page="guide"},ar)
-  } else {
-   Box(Modifier.weight(1f)){
-    when(page){
-     "home"->LazyColumn(contentPadding=PaddingValues(14.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-      item{Column(Modifier.background(panel,RoundedCornerShape(15.dp)).fillMaxWidth().padding(18.dp)){
-       Text("ပုဂံယဉ်ကျေးမှု အမွေအနှစ်",color=gold,fontSize=21.sp,fontWeight=FontWeight.Bold)
-       Text("ပထမ App ၏ Guide / History / Map / Favorites ကို Native 3D Viewer နှင့် ပြန်ပေါင်းထားပါသည်။",color=Color.White,fontSize=13.sp)
-       Button(onClick={page="guide"}){Text("ဘုရား 3D ပြခန်း ဖွင့်ရန်")}
-      }}
-      item{Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-       Button(onClick={page="guide"},modifier=Modifier.weight(1f)){Text("3D Models")}
-       OutlinedButton(onClick={page="maps"},modifier=Modifier.weight(1f)){Text("Maps")}
-      }}
-      item{Text("ထင်ရှားသော ပုဂံဘုရားများ",color=gold,fontSize=17.sp)}
-      items(data.take(6)){t->Item(t,t.id in favorites,{open(t)},{save(t)},{map(t)})}
-     }
-     "guide"->Column{
-      OutlinedTextField(search,{search=it},label={Text("Search pagodas / ဘုရားအမည်")},modifier=Modifier.fillMaxWidth().padding(10.dp),singleLine=true)
-      LazyColumn(contentPadding=PaddingValues(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
-       items(data.filter{search.isBlank()||it.nameMm.contains(search,true)||it.nameEn.contains(search,true)}){
-        t->Item(t,t.id in favorites,{open(t)},{save(t)},{map(t)})
-       }
-      }
-     }
-     "saved"->LazyColumn(contentPadding=PaddingValues(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
-      item{Text("Favorites ★",color=gold,fontSize=20.sp)}
-      items(data.filter{it.id in favorites}){t->Item(t,true,{open(t)},{save(t)},{map(t)})}
-     }
-     "maps"->LazyColumn(contentPadding=PaddingValues(10.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
-      item{Text("Map & Directions",color=gold,fontSize=20.sp)}
-      items(data){t->Item(t,t.id in favorites,{open(t)},{save(t)},{map(t)})}
-     }
-     else->LazyColumn(contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(15.dp)){
-      item{Text("ပုဂံသမိုင်း / Information",color=gold,fontSize=22.sp)}
-      item{Info("History","ပုဂံသည် မြန်မာ့ရှေးဟောင်းယဉ်ကျေးမှု အမွေအနှစ်ဒေသဖြစ်ပြီး ၂၀၁၉ ခုနှစ်တွင် UNESCO ကမ္ဘာ့အမွေအနှစ်စာရင်းဝင်ခဲ့သည်။")}
-      item{Info("Visitor Guide","ဘုရားပုထိုးများပေါ် မတက်ပါနှင့်။ ရှေးဟောင်းနံရံနှင့် ပန်းချီများကို မထိပါနှင့်။ နေရာအသီးသီး၏ စည်းကမ်းကို လိုက်နာပါ။")}
-      item{Info("Offline 3D","GLB ဖိုင် Download အောင်မြင်ပါက Cache သိမ်းထားမည်။ Server GLB မရလျှင် Demo 3D ကိုပြပါမည်။")}
-      item{Info("AR","AR လုပ်ဆောင်ရန် Google App, ARCore Support နှင့် Public HTTPS GLB လိုအပ်နိုင်သည်။")}
-     }
+private fun BaganRecoveryScreen(message: String, onRetry: () -> Unit, onSafeMode: () -> Unit) {
+    LazyColumn(
+        Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(horizontal = 22.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        item { Text("BAGAN HERITAGE MUSEUM", style = MaterialTheme.typography.headlineSmall) }
+        item { Text("App Recovery / အက်ပ်ပြန်လည်စတင်ရန်", style = MaterialTheme.typography.titleMedium) }
+        item { Text("ယခင်ဖွင့်ရာတွင် အက်ပ်အမှားတစ်ခု တွေ့ရှိခဲ့ပါသည်။ Error စာသားကို Screenshot ရိုက်၍ ပေးပို့နိုင်ပါသည်။") }
+        item {
+            SelectionContainer {
+                Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant) {
+                    Text(message.take(3000), Modifier.padding(14.dp), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        item { Button(onClick = onSafeMode, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) { Text("Safe Mode ဖြင့် ဖွင့်ရန်") } }
+        item { OutlinedButton(onClick = onRetry, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) { Text("ပုံမှန် ပြန်ဖွင့်ရန်") } }
     }
-   }
-  }
- }
 }
-@Composable private fun Info(title:String,body:String){
- Column(Modifier.fillMaxWidth().background(panel,RoundedCornerShape(12.dp)).padding(16.dp)){
-  Text(title,color=gold,fontSize=18.sp); Spacer(Modifier.height(6.dp));Text(body,color=Color.White)
- }
-}
-@Composable private fun Item(t:Temple,saved:Boolean,view:()->Unit,save:()->Unit,map:()->Unit){
- Column(Modifier.fillMaxWidth().background(panel,RoundedCornerShape(12.dp)).padding(15.dp)){
-  Text(t.nameMm,color=gold,fontSize=17.sp,fontWeight=FontWeight.Bold)
-  Text(t.nameEn,color=Color.White,fontSize=12.sp)
-  Row(horizontalArrangement=Arrangement.spacedBy(5.dp)){
-   Button(onClick=view){Text("3D")}
-   OutlinedButton(onClick=map){Text("Map")}
-   TextButton(onClick=save){Text(if(saved)"★ Saved" else "☆ Save")}
-  }
- }
-}
-@Composable private fun ModelPage(t:Temple,back:()->Unit,ar:(Temple)->Unit){
- val context=LocalContext.current
- var link by remember(t.id){mutableStateOf<String?>(null)}
- var loading by remember(t.id){mutableStateOf(true)}
- var progress by remember(t.id){mutableIntStateOf(0)}
- var failure by remember(t.id){mutableStateOf<String?>(null)}
- var demo by remember(t.id){mutableStateOf(false)}
- var retry by remember(t.id){mutableIntStateOf(0)}
- var rendererReady by remember(t.id){mutableStateOf(false)}
- var slow by remember(t.id){mutableStateOf(false)}
- var arHelp by remember{mutableStateOf(false)}
- var demoNow by remember(t.id){mutableIntStateOf(0)}
- LaunchedEffect(t.id,retry,demoNow){
-  link=null;failure=null;loading=true;progress=0;demo=false;rendererReady=false;slow=false
-  try {
-   if(demoNow>0) {
-    withContext(Dispatchers.IO){ModelRepository.demo(context)}
-    demo=true;link="models/demo_pagoda.glb"
-   } else {
-   val f=withContext(Dispatchers.IO){
-    ModelRepository.download(context,t){p->(context as? android.app.Activity)?.runOnUiThread{progress=p}}
-   }
-   link=Uri.fromFile(f).toString()
-   }
-  } catch(e:Exception){
-   failure=e.message?:"cPanel GLB file unavailable"
-   try{
-    withContext(Dispatchers.IO){ModelRepository.demo(context)}
-    demo=true;link="models/demo_pagoda.glb"
-   }catch(x:Exception){failure=failure+" | Demo: "+x.message}
-  }finally{loading=false}
- }
- LaunchedEffect(link){if(link!=null){kotlinx.coroutines.delay(15000);if(!rendererReady)slow=true}}
- Column(Modifier.fillMaxSize()){
-  Row(verticalAlignment=Alignment.CenterVertically){TextButton(onClick=back){Text("← Back")};Text(t.nameMm,color=gold)}
-  Box(Modifier.fillMaxWidth().weight(1f).background(Color(0xFF07111E))){
-   if(link!=null){
-    key(link){
-     SceneView(modifier=Modifier.fillMaxSize()){
-      rememberModelInstance(modelLoader,link!!)?.let{instance->
-       ModelNode(modelInstance=instance,scaleToUnits=1.25f,autoAnimate=true,isEditable=true)
-       LaunchedEffect(instance){rendererReady=true}
-      }
-     }
+
+@Composable
+private fun BaganSafeMode(temples: List<Temple>, onMap: (Temple) -> Unit, onExitSafe: () -> Unit) {
+    LazyColumn(
+        Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        item { Text("BAGAN — Safe Mode", style = MaterialTheme.typography.headlineSmall) }
+        item { Text("3D နှင့် AR ကို ယာယီပိတ်ထားပြီး ဘုရားစာရင်းကို ကြည့်ရှုနိုင်ပါသည်။") }
+        item { OutlinedButton(onClick = onExitSafe) { Text("ပုံမှန် Home သို့ပြန်ရန်") } }
+        items(temples) { site ->
+            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp)) {
+                    Text(site.nameMm, style = MaterialTheme.typography.titleMedium)
+                    Text(site.nameEn)
+                    TextButton(onClick = { onMap(site) }) { Text("မြေပုံတွင်ကြည့်ရန်") }
+                }
+            }
+        }
     }
-   }
-   if(loading) Column(Modifier.align(Alignment.Center),horizontalAlignment=Alignment.CenterHorizontally){
-    CircularProgressIndicator(progress={progress/100f},color=gold)
-    Text("3D Loading… $progress%",color=gold)
-   }
-   else if(link==null) Column(Modifier.align(Alignment.Center),horizontalAlignment=Alignment.CenterHorizontally){
-    Text(failure?:"Model unavailable",color=gold);Button(onClick={retry++}){Text("Retry")}
-   }
-   else if(!rendererReady)Column(Modifier.align(Alignment.Center).padding(12.dp),horizontalAlignment=Alignment.CenterHorizontally){
-    CircularProgressIndicator(color=gold)
-    Text(if(slow)"Renderer ကြာနေပါသည် — Demo 3D စမ်းပါ" else "3D Renderer ပြင်ဆင်နေပါသည်",color=gold)
-    if(slow)Button(onClick={demoNow++}){Text("Offline Demo 3D")}
-   }
-   if(demo && !loading)Text("DEMO 3D — မူရင်းဘုရား Model မဟုတ်ပါ",color=gold,
-      modifier=Modifier.align(Alignment.BottomCenter).background(panel).padding(6.dp))
-  }
-  if(failure!=null)Text(failure!!,color=gold,fontSize=11.sp,modifier=Modifier.padding(8.dp))
-  Row(Modifier.padding(10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
-   OutlinedButton(onClick={retry++},modifier=Modifier.weight(1f)){Text("↻ Retry")}
-   TextButton(onClick={demoNow++}){Text("Demo")}
-   Button(onClick={if(demo||loading||link==null)arHelp=true else ar(t)},modifier=Modifier.weight(1f)){Text("AR")}
-  }
-  Text("Drag: Rotate   •   Pinch: Zoom",color=Color.White,fontSize=11.sp,modifier=Modifier.align(Alignment.CenterHorizontally))
- }
- if(arHelp)androidx.compose.material3.AlertDialog(onDismissRequest={arHelp=false},title={Text("AR မရနိုင်ပါ")},
-  text={Text("မူရင်း GLB ဖိုင်ကို cPanel မှ မရရှိသေးပါ။ ${t.url} သို့ GLB ဖိုင်တင်ပြီး ပြန်စမ်းပါ။")},
-  confirmButton={TextButton(onClick={arHelp=false}){Text("OK")}})
 }
