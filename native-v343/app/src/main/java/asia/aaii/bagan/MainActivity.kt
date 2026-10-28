@@ -63,26 +63,42 @@ class MainActivity:ComponentActivity(){
   catch(e:Exception){android.widget.Toast.makeText(this,"Map app unavailable",1).show()}
  }
  private fun launchAr(t:Temple){
-  val available=try {ArCoreApk.getInstance().checkAvailability(this)}
+  val availability=try { ArCoreApk.getInstance().checkAvailability(this) }
     catch(e:Exception){null}
-  if(available?.isSupported != true){
-    AlertDialog.Builder(this).setTitle("ARCore မရနိုင်သေးပါ")
-      .setMessage("ဖုန်းမှာ Google Play Services for AR ပံ့ပိုးမှု မရှိသေးနိုင်ပါ။ Google Play Services for AR ကို စစ်ဆေးပါ။ 3D Model ကိုတော့ ပုံမှန်ကြည့်နိုင်ပါတယ်။")
+  if(availability?.isSupported != true){
+    AlertDialog.Builder(this).setTitle("ARCore Support Check")
+      .setMessage(if(availability?.isTransient==true)
+        "ARCore availability is still being checked. Tap AR again shortly."
+       else "This phone may not support Google Play Services for AR. You can use the Native 3D Viewer instead. Status: $availability")
       .setPositiveButton("OK",null).show()
     return
   }
-  val file=ModelRepository.cached(this,t)
-  if(!file.exists()) {
-    android.widget.Toast.makeText(this,"AR အတွက် မူရင်း GLB ကို Download အရင်လုပ်ပါ",android.widget.Toast.LENGTH_LONG).show()
+  val modelFile=ModelRepository.cached(this,t)
+  val actual=try {ModelRepository.validate(modelFile);true}catch(_:Exception){false}
+  val source=if(actual)modelFile else try {ModelRepository.demo(this)} catch(e:Exception){
+    AlertDialog.Builder(this).setTitle("AR Model Error").setMessage(e.localizedMessage?:"No usable GLB")
+      .setPositiveButton("OK",null).show()
     return
   }
-  try {
-    ModelRepository.validate(file)
-    startActivity(Intent(this,NativeARActivity::class.java).putExtra("file_uri",Uri.fromFile(file).toString()).putExtra("model_name",t.nameMm))
-  }catch(e:Exception){
-    AlertDialog.Builder(this).setTitle("AR Model Error").setMessage(e.localizedMessage?:"GLB ဖိုင်ကို မဖတ်နိုင်ပါ").setPositiveButton("OK",null).show()
+  fun openModel(){
+    try {
+      startActivity(Intent(this,NativeARActivity::class.java)
+        .putExtra("file_uri",Uri.fromFile(source).toString())
+        .putExtra("model_name",if(actual)t.nameMm else "Bagan Demo Pagoda")
+        .putExtra("demo_mode",!actual))
+    }catch(e:Exception){
+      AlertDialog.Builder(this).setTitle("AR Error")
+        .setMessage(e.localizedMessage?:"AR camera cannot start")
+        .setPositiveButton("OK",null).show()
+    }
   }
+  if(actual)openModel()
+  else AlertDialog.Builder(this).setTitle("Offline Demo AR")
+    .setMessage("The original ${t.nameEn} GLB is not downloaded. Open AR using the bundled DEMO pagoda instead? The demo is not a scan of the real temple.")
+    .setPositiveButton("Demo AR"){_,_->openModel()}
+    .setNegativeButton("Cancel",null).show()
  }
+
 }
 @Composable
 private fun Museum(data:List<Temple>,ar:(Temple)->Unit,map:(Temple)->Unit){
