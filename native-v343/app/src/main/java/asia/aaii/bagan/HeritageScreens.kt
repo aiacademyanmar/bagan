@@ -2,6 +2,7 @@
 package asia.aaii.bagan
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,7 +63,7 @@ fun BaganHeritageApp(
  var infoTab by remember {mutableStateOf("Overview")}
  var imageTab by remember {mutableStateOf("All")}
  var showLang by remember {mutableStateOf(false)}
- var language by remember {mutableStateOf("မြန်မာ")}
+ var language by remember {mutableStateOf(prefs.getString("language", "မြန်မာ") ?: "မြန်မာ")}
  var quality by remember {mutableStateOf("High")}
  var onlineOnly by remember {mutableStateOf(false)}
  var loadProgress by remember {mutableIntStateOf(0)}
@@ -75,6 +76,7 @@ fun BaganHeritageApp(
  var bulkStatus by remember {mutableStateOf("")}
 
  fun go(n:Int) { route=n.coerceIn(1,27) }
+ BackHandler(enabled=route!=2 && route!=27) { go(2) }
  fun openTemple(t:Temple){selected=t;go(4)}
  fun favorite(t:Temple){
   fav=if(t.id in fav)fav-t.id else fav+t.id
@@ -201,7 +203,7 @@ fun BaganHeritageApp(
  }
  if(showLang) AlertDialog(onDismissRequest={showLang=false},title={Text("Language / ဘာသာစကား")},
   text={Column {
-   listOf("မြန်မာ","English").forEach{l->TextButton(onClick={language=l;showLang=false}){Text(l)}}
+   listOf("မြန်မာ","English").forEach{l->TextButton(onClick={language=l;prefs.edit().putString("language",l).apply();showLang=false}){Text(l)}}
   }},confirmButton={TextButton(onClick={showLang=false}){Text("Close")}})
 }
 
@@ -213,13 +215,13 @@ private fun Head(t:String,number:Int,sub:String?=null){
  }
 }
 @Composable private fun GButton(text:String,action:()->Unit,modifier:Modifier=Modifier){
- Button(onClick=action,modifier=modifier,colors=ButtonDefaults.buttonColors(containerColor=Gold,contentColor=Navy),
+ Button(onClick=action,modifier=modifier.heightIn(min=48.dp),colors=ButtonDefaults.buttonColors(containerColor=Gold,contentColor=Navy),
   shape=RoundedCornerShape(11.dp),contentPadding=PaddingValues(horizontal=13.dp,vertical=10.dp)){
   Text(text,fontWeight=FontWeight.Bold,fontSize=12.sp)
  }
 }
 @Composable private fun Outline(text:String,action:()->Unit,modifier:Modifier=Modifier){
- OutlinedButton(onClick=action,modifier=modifier,shape=RoundedCornerShape(11.dp),contentPadding=PaddingValues(horizontal=11.dp,vertical=8.dp)){
+ OutlinedButton(onClick=action,modifier=modifier.heightIn(min=48.dp),shape=RoundedCornerShape(11.dp),contentPadding=PaddingValues(horizontal=11.dp,vertical=8.dp)){
   Text(text,color=Navy,fontSize=12.sp)
  }
 }
@@ -256,7 +258,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   horizontalArrangement=Arrangement.spacedBy(7.dp)){
   names.forEach{n->
    Box(Modifier.background(if(n==chosen)Gold else Color(0xFFF0E9DD),RoundedCornerShape(22.dp))
-     .clickable{set(n)}.padding(horizontal=15.dp,vertical=9.dp)){
+     .clickable{set(n)}.heightIn(min=48.dp).padding(horizontal=15.dp,vertical=9.dp)){
     Text(n,fontSize=11.sp,color=Ink,fontWeight=if(n==chosen)FontWeight.Bold else FontWeight.Normal)
    }
   }
@@ -416,7 +418,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  var rendered by remember(file){mutableStateOf(false)}
  var timedOut by remember(file){mutableStateOf(false)}
  LaunchedEffect(file){
-  if(file!=null) {kotlinx.coroutines.delay(12000);if(!rendered)timedOut=true}
+  if(file!=null) {kotlinx.coroutines.delay(20000);if(!rendered)timedOut=true}
  }
  Column(Modifier.fillMaxSize().background(Navy)){
   Row(Modifier.padding(12.dp),verticalAlignment=Alignment.CenterVertically){
