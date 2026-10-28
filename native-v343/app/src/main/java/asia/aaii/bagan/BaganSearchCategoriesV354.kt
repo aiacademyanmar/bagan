@@ -62,9 +62,9 @@ fun V354Categories(
 ){
  val groups=listOf(
    Triple("All","အားလုံး",temples.size),
-   Triple("Famous","ထင်ရှားသောဘုရားများ",temples.take(6).size),
-   Triple("Temples","ဂူဘုရားများ",temples.count{it.nameEn.contains("temple",true)}),
-   Triple("Stupas","စေတီပုထိုးများ",temples.count{it.nameEn.contains("pagoda",true)||it.nameEn.contains("stupa",true)})
+   Triple("Famous","ထင်ရှားသောဘုရားများ",BaganCategoryFilter.count(temples,"Famous")),
+   Triple("Temples","ဂူဘုရားများ",BaganCategoryFilter.count(temples,"Temples")),
+   Triple("Stupas","စေတီပုထိုးများ",BaganCategoryFilter.count(temples,"Stupas"))
  )
  LazyColumn(Modifier.fillMaxSize().background(BaganCream),
    contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
