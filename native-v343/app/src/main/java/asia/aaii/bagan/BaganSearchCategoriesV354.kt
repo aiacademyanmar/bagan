@@ -37,7 +37,7 @@ fun V354Search(
     items(matches){t->
       Card(colors=CardDefaults.cardColors(containerColor=Color.White)){
         Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically){
-          Image(painter=painterResource(id=when(temples.indexOf(t)%6){0->R.drawable.bagan_illustration_1;1->R.drawable.bagan_illustration_2;2->R.drawable.bagan_illustration_3;3->R.drawable.bagan_illustration_4;4->R.drawable.bagan_illustration_5;else->R.drawable.bagan_illustration_6}),contentDescription="Bagan illustration",modifier=Modifier.size(75.dp,78.dp),contentScale=ContentScale.Crop)
+          Image(painter=painterResource(id=when(temples.indexOf(t)%6){0->R.drawable.bagan_safe_1;1->R.drawable.bagan_safe_2;2->R.drawable.bagan_safe_3;3->R.drawable.bagan_safe_4;4->R.drawable.bagan_safe_5;else->R.drawable.bagan_safe_6}),contentDescription="Bagan illustration",modifier=Modifier.size(75.dp,78.dp),contentScale=ContentScale.Crop)
           Spacer(Modifier.width(10.dp))
           Column(Modifier.weight(1f)){
           Text(t.nameMm,fontSize=17.sp,fontWeight=FontWeight.Bold,color=BaganBrown)
@@ -76,7 +76,7 @@ fun V354Categories(
      Card(onClick={onCategory(key)},colors=CardDefaults.cardColors(containerColor=Color.White),
        modifier=Modifier.fillMaxWidth()){
        Row(Modifier.fillMaxWidth().padding(18.dp),verticalAlignment=Alignment.CenterVertically){
-         Image(painter=painterResource(id=when(key){"All"->R.drawable.bagan_illustration_4;"Famous"->R.drawable.bagan_illustration_2;"Temples"->R.drawable.bagan_illustration_5;else->R.drawable.bagan_illustration_6}),contentDescription=null,modifier=Modifier.size(64.dp),contentScale=ContentScale.Crop)
+         Image(painter=painterResource(id=when(key){"All"->R.drawable.bagan_safe_4;"Famous"->R.drawable.bagan_safe_2;"Temples"->R.drawable.bagan_safe_5;else->R.drawable.bagan_safe_6}),contentDescription=null,modifier=Modifier.size(64.dp),contentScale=ContentScale.Crop)
          Spacer(Modifier.width(14.dp))
          Column(Modifier.weight(1f)){
            Text(name,fontWeight=FontWeight.Bold,color=BaganBrown)
