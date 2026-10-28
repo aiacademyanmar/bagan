@@ -44,7 +44,7 @@ class MainActivity:ComponentActivity(){
   }
   val data=ModelRepository.catalog(this)
   setContent { MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=panel)){
-   BaganHeritageApp(data,{t->launchMap(t)},{t->launchAr(t)},{text->speakGuide(text)})
+   BaganEntryFlow(data,{t->launchMap(t)},{t->launchAr(t)},{text->speakGuide(text)})
   } }
  }
  private fun speakGuide(text:String){
