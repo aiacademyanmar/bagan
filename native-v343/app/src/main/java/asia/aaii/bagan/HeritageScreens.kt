@@ -74,7 +74,7 @@ fun BaganHeritageApp(
  var bulkStart by remember {mutableIntStateOf(0)}
  var bulkStatus by remember {mutableStateOf("")}
 
- fun go(n:Int) { route=n.coerceIn(1,22) }
+ fun go(n:Int) { route=n.coerceIn(1,25) }
  fun openTemple(t:Temple){selected=t;go(4)}
  fun favorite(t:Temple){
   fav=if(t.id in fav)fav-t.id else fav+t.id
@@ -150,7 +150,7 @@ fun BaganHeritageApp(
    // Navigation is deliberately at the TOP, below the title.
    Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState()).padding(horizontal=5.dp,vertical=4.dp),
      horizontalArrangement=Arrangement.spacedBy(2.dp)) {
-    listOf(2 to "⌂ Home",13 to "⌕ Search",22 to "▦ Categories",7 to "⌖ Map",5 to "⬡ 3D",6 to "▣ AR Camera",12 to "♡ Saved",16 to "☰ Settings").forEach{(p,name)->
+    listOf(2 to "⌂ Home",13 to "⌕ Search",22 to "▦ Categories",11 to "♧ Routes",23 to "♜ Museum",7 to "⌖ Map",5 to "⬡ 3D",6 to "▣ AR Camera",12 to "♡ Saved",16 to "☰ Settings").forEach{(p,name)->
      val isActive=p==route
      Box(Modifier.background(if(isActive)Gold else Color.Transparent,RoundedCornerShape(8.dp))
        .clickable {
@@ -177,10 +177,10 @@ fun BaganHeritageApp(
     6->ArInstructions(selected,onStart={selected?.let{onAR(it)}},onBack={go(4)},onModel={selected?.let{loadModel(it)} ?: go(3)})
     7->MapPage(temples,onDirections={onMap(it)},onDetail={openTemple(it)})
     8->GalleryPage(selected,imageTab,{imageTab=it},onDetail={go(4)})
-    9->HistoryPage(selected,onSpeak={onSpeak(it)},onBack={go(4)})
+    9->TimelineV356(onSpeak={onSpeak(it)})
     10->AudioPage(selected,onSpeak={onSpeak(it)})
-    11->RelatedPage(temples,selected,onSelect={openTemple(it)})
-    12->FavoritesPage(temples.filter{it.id in fav},{openTemple(it)},{favorite(it)})
+    11->RoutesV356(temples,details={openTemple(it)},directions={onMap(it)})
+    12->FavoritesV356(temples.filter{it.id in fav},details={openTemple(it)},remove={favorite(it)})
     13->V354Search(temples,query,{query=it},onDetails={openTemple(it)},onThreeD={loadModel(it)})
     14->NearbyPage(temples,{onMap(it)},{openTemple(it)})
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)})
@@ -195,6 +195,9 @@ fun BaganHeritageApp(
     20->ErrorPage(loadError,onRetry={selected?.let{loadModel(it)}},onDemo={demoModel()},onBack={go(3)})
     21->BaganDiagnosticsScreen(temples,onBack={go(16)})
     22->V354Categories(temples,onCategory={category=it;go(3)},onTemple={openTemple(it)})
+    23->MuseumInfoV356(onHistory={go(9)},onArtifacts={go(24)})
+    24->ArtifactsV356(onBack={go(23)})
+    25->RelatedPage(temples,selected,onSelect={openTemple(it)})
    }
   }
  }
@@ -406,7 +409,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   item{
    Row(Modifier.padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
     Outline("Audio Guide",{onPage(10)},Modifier.weight(1f))
-    Outline("Related Pagodas",{onPage(11)},Modifier.weight(1f))
+    Outline("Related Pagodas",{onPage(25)},Modifier.weight(1f))
    }
   }
  }
