@@ -21,11 +21,13 @@ import java.util.Map;
  * Supports glTF2 scene graph hierarchy, FLOAT POSITION accessor strides,
  * uint8/uint16/uint32 triangle indices and material base-color factors.
  * Draws a bounded triangle sample on GLES2 phones for stability.
- * Embedded textures / PBR illumination are not implemented in this renderer.
+ * Embedded textures and full physically based rendering are not implemented. Adjustable approximate material illumination is supported.
  * No illustrative or replacement geometry is silently substituted.
  */
 public final class DriveArGlb {
     private static final int MAX_TRIANGLES=145000;
+    private float illumination=1f;
+    public void setIllumination(float value){illumination=Math.max(.35f,Math.min(1.65f,value));}
     private static final int MAX_FILE_BYTES=65_000_000;
     private static final class FloatList {
         float[] values=new float[2048]; int count;
@@ -249,7 +251,8 @@ public final class DriveArGlb {
         for(Batch b:drawBatches){
             b.vertices.position(0);
             GLES20.glVertexAttribPointer(positionAttr,3,GLES20.GL_FLOAT,false,0,b.vertices);
-            GLES20.glUniform4fv(colorUniform,1,b.rgba,0);
+            float[] lit={Math.min(1f,b.rgba[0]*illumination),Math.min(1f,b.rgba[1]*illumination),Math.min(1f,b.rgba[2]*illumination),1f};
+            GLES20.glUniform4fv(colorUniform,1,lit,0);
             GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,b.count);
         }
         GLES20.glDisableVertexAttribArray(positionAttr);

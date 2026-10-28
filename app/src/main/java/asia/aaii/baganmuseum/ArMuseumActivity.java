@@ -43,7 +43,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
     private Session session;
     private boolean installRequested;
     private volatile boolean resumed;
-    private volatile float arScale=1f, arRotation=0f;
+    private volatile float arScale=1f, arRotation=0f, arIllumination=1f;
     private TextView transformLabel;
     private volatile boolean glReady;
     private int cameraTexture;
@@ -107,7 +107,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         hud.setPadding(18,22,18,18);
         hud.setBackgroundColor(0xAA1F1611);
         TextView title = new TextView(this);
-        title.setText("BAGAN AR V2.3 — "+selectedLabel);
+        title.setText("BAGAN AR V3.0 — "+selectedLabel);
         title.setTextColor(0xFFF3BD69);
         title.setTextSize(17);
         hud.addView(title);
@@ -143,8 +143,16 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
         adjustments.addView(enlarge,new LinearLayout.LayoutParams(0,-2,1));
         adjustments.addView(turn,new LinearLayout.LayoutParams(0,-2,1));
         hud.addView(adjustments);
+        LinearLayout lightControls=new LinearLayout(this);
+        Button darker=new Button(this);darker.setText("Light -");
+        darker.setOnClickListener(v->{arIllumination=Math.max(.35f,arIllumination-.15f);updateTransformLabel();});
+        Button brighter=new Button(this);brighter.setText("Light +");
+        brighter.setOnClickListener(v->{arIllumination=Math.min(1.65f,arIllumination+.15f);updateTransformLabel();});
+        lightControls.addView(darker,new LinearLayout.LayoutParams(0,-2,1));
+        lightControls.addView(brighter,new LinearLayout.LayoutParams(0,-2,1));
+        hud.addView(lightControls);
         Button reset=new Button(this);reset.setText("Reset 3D transforms");
-        reset.setOnClickListener(v->{arScale=1f;arRotation=0f;updateTransformLabel();});
+        reset.setOnClickListener(v->{arScale=1f;arRotation=0f;arIllumination=1f;updateTransformLabel();});
         hud.addView(reset);
         updateTransformLabel();
         FrameLayout.LayoutParams hp = new FrameLayout.LayoutParams(-1,-2,Gravity.TOP);
@@ -154,7 +162,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
 
     private void updateTransformLabel(){
         if(transformLabel!=null)
-            transformLabel.setText(String.format(java.util.Locale.US,"Size %.2fx • Rotation %.0f°",arScale,arRotation));
+            transformLabel.setText(String.format(java.util.Locale.US,"Size %.2fx • Rotation %.0f° • Light %.2fx",arScale,arRotation,arIllumination));
     }
     private void report(String msg) {
         runOnUiThread(() -> { if (statusView != null) statusView.setText(msg); });
@@ -338,7 +346,7 @@ public final class ArMuseumActivity extends Activity implements GLSurfaceView.Re
                 Matrix.multiplyMM(modelView,0,view,0,model,0);
                 Matrix.multiplyMM(mvp,0,projection,0,modelView,0);
                 GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-                if(driveMuseum!=null) driveMuseum.draw(mvp);
+                if(driveMuseum!=null) {driveMuseum.setIllumination(arIllumination);driveMuseum.draw(mvp);}
                 else if(entireMuseum!=null) entireMuseum.draw(mvp);
                 else if(!driveMode) {
                     drawSolid(templeBase,18,new float[]{.64f,.33f,.20f,1});
