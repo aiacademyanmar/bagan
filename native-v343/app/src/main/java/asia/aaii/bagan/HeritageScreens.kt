@@ -65,7 +65,7 @@ fun BaganHeritageApp(
  var showLang by remember {mutableStateOf(false)}
  var language by remember {mutableStateOf(prefs.getString("language", "မြန်မာ") ?: "မြန်မာ")}
  var quality by remember {mutableStateOf("High")}
- var onlineOnly by remember {mutableStateOf(false)}
+ var onlineOnly by remember {mutableStateOf(prefs.getBoolean("offline_mode",false))}
  var loadProgress by remember {mutableIntStateOf(0)}
  var modelFile by remember {mutableStateOf<String?>(null)}
  var modelDemo by remember {mutableStateOf(false)}
@@ -172,7 +172,7 @@ fun BaganHeritageApp(
     13->V354Search(temples,query,{query=it},onDetails={openTemple(it)},onThreeD={loadModel(it)})
     14->NearbyPage(temples,{onMap(it)},{openTemple(it)})
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)})
-    16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)})
+    16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)})
     17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
     18->AboutV357(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
@@ -350,8 +350,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   OutlinedTextField(search,setSearch,modifier=Modifier.fillMaxWidth().padding(horizontal=13.dp),
     singleLine=true,placeholder={Text("Search pagodas…")},leadingIcon={Text("⌕")})
   PillGroup(listOf("All","Famous","Temples","Stupas"),cat,setCat)
-  val shown=ts.filter{(search.isBlank()||it.nameEn.contains(search,true)||it.nameMm.contains(search,true)) &&
-    (cat=="All"||(cat=="Famous"&&ts.indexOf(it) in 0..5)||(cat=="Temples"&&it.nameEn.contains("temple",true))||(cat=="Stupas"&&(it.nameEn.contains("pagoda",true)||it.nameEn.contains("stupa",true))))}
+  val shown=BaganCategoryFilter.matching(ts,cat,search)
   LazyColumn(contentPadding=PaddingValues(bottom=15.dp)){
    items(shown){t->TempleItem(t,ts.indexOf(t),t.id in favs,{open(t)},{favorite(t)},{model(t)},{map(t)})}
   }
