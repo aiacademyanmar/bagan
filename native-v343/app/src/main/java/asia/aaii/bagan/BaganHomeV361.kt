@@ -200,7 +200,7 @@ fun V361Home(
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Column {
-                            Image(painter=painterResource(id=when((index + temple.id.length)%6){0->R.drawable.bagan_illustration_1;1->R.drawable.bagan_illustration_2;2->R.drawable.bagan_illustration_3;3->R.drawable.bagan_illustration_4;4->R.drawable.bagan_illustration_5;else->R.drawable.bagan_illustration_6}),contentDescription="Bagan temple illustration",modifier=Modifier.fillMaxWidth().height(124.dp),contentScale=ContentScale.Crop)
+                            Image(painter=painterResource(id=when((index + temple.id.length)%6){0->R.drawable.bagan_safe_1;1->R.drawable.bagan_safe_2;2->R.drawable.bagan_safe_3;3->R.drawable.bagan_safe_4;4->R.drawable.bagan_safe_5;else->R.drawable.bagan_safe_6}),contentDescription="Bagan temple illustration",modifier=Modifier.fillMaxWidth().height(124.dp),contentScale=ContentScale.Crop)
                             Column(Modifier.padding(10.dp)) {
                                 Text(
                                     temple.nameMm, color = darkBrown, fontSize = 14.sp,
