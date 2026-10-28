@@ -37,10 +37,10 @@ private val CardBorder=Color(0xFFE6D9C2)
 private val SoftGold=Color(0xFFFFDF96)
 
 private val labels=listOf(
- "01 Splash","02 Home","03 Pagodas List","04 Temple Detail","05 3D Viewer",
- "06 AR Mode","07 Bagan Map","08 Gallery","09 History","10 Audio Guide",
- "11 Related Pagodas","12 Favorites","13 Search","14 Nearby Places",
- "15 Offline Download","16 Settings","17 Help & Guide","18 About Bagan",
+ "01 Splash","02 Home","03 Pagodas","04 Site Details","05 3D Viewer",
+ "06 AR Camera","07 Bagan Map","08 Gallery","09 History","10 Audio Guide",
+ "11 Routes","12 Favorites","13 Search","14 Nearby Places",
+ "15 Offline Downloads","16 Settings","17 Help & Support","18 About Bagan",
  "19 3D Loading","20 Error Handling"
 )
 
@@ -135,7 +135,7 @@ fun BaganHeritageApp(
    bulkStatus="$ok / ${temples.size} offline models available"
   }
  }
- Column(Modifier.fillMaxSize().background(Pale)) {
+ Column(Modifier.fillMaxSize().background(Pale).windowInsetsPadding(WindowInsets.safeDrawing)) {
   if(route!=1){
    Row(Modifier.fillMaxWidth().background(Navy).padding(horizontal=15.dp,vertical=9.dp),
        verticalAlignment=Alignment.CenterVertically) {
@@ -150,7 +150,7 @@ fun BaganHeritageApp(
    // Navigation is deliberately at the TOP, below the title.
    Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState()).padding(horizontal=5.dp,vertical=4.dp),
      horizontalArrangement=Arrangement.spacedBy(2.dp)) {
-    listOf(2 to "⌂ Home",3 to "♜ Pagodas",7 to "♧ Map",5 to "⬡ 3D",6 to "▣ AR",12 to "♡ Saved",16 to "☰ More").forEach{(p,name)->
+    listOf(2 to "⌂ Home",3 to "♜ Temples",7 to "⌖ Map",5 to "⬡ 3D",6 to "▣ AR Camera",12 to "♡ Saved",16 to "☰ Settings").forEach{(p,name)->
      val isActive=p==route
      Box(Modifier.background(if(isActive)Gold else Color.Transparent,RoundedCornerShape(8.dp))
        .clickable {
@@ -272,7 +272,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    Column(Modifier.weight(1f)){
     Text(t.nameEn,color=Ink,fontWeight=FontWeight.Bold,fontSize=14.sp,maxLines=2)
     Text(t.nameMm,color=Muted,fontSize=12.sp)
-    Text("Bagan heritage site",color=Muted,fontSize=10.sp)
+    Text("ပုဂံ ရှေးဟောင်းအမွေအနှစ်နေရာ",color=Muted,fontSize=10.sp)
     Row(verticalAlignment=Alignment.CenterVertically){
      Text("⬡ 3D   ◉ Map",color=Color(0xFFA36E2A),fontSize=11.sp,modifier=Modifier.clickable{model()})
     }
@@ -325,7 +325,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   item {Head("Discover Bagan",2,"History • Pagodas • Maps • 3D Museum • AR Experience")}
   item{
    Column(Modifier.padding(horizontal=10.dp)){
-    val shortcuts=listOf(9 to "📜 History",3 to "♜ Pagodas",7 to "📍 Map",5 to "⬡ 3D Museum",
+    val shortcuts=listOf(9 to "📜 History",3 to "♜ Temples",7 to "📍 Map",5 to "⬡ 3D Museum",
      6 to "▣ AR Mode",15 to "↓ Offline",14 to "📍 Nearby",16 to "⚙ Settings")
     shortcuts.chunked(4).forEach{line->
      Row(horizontalArrangement=Arrangement.spacedBy(6.dp),modifier=Modifier.padding(bottom=8.dp)){
@@ -355,7 +355,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
 @Composable private fun PagodaList(ts:List<Temple>,search:String,setSearch:(String)->Unit,cat:String,setCat:(String)->Unit,
  open:(Temple)->Unit,favorite:(Temple)->Unit,model:(Temple)->Unit,map:(Temple)->Unit,favs:Set<String>){
  Column {
-  Head("Pagodas List",3,"ဘုရားပုထိုးများ • ${ts.size} 3D catalog entries")
+  Head("Pagodas & Temples",3,"ဘုရားပုထိုးများ • ${ts.size} 3D catalog entries")
   OutlinedTextField(search,setSearch,modifier=Modifier.fillMaxWidth().padding(horizontal=13.dp),
     singleLine=true,placeholder={Text("Search pagodas…")},leadingIcon={Text("⌕")})
   PillGroup(listOf("All","Famous","Temples","Stupas"),cat,setCat)
@@ -379,7 +379,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   }
   item {
    Row(Modifier.padding(horizontal=10.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
-    listOf("⬡ 3D" to onModel,"▣ AR" to onAR,"📍 Map" to onMap,(if(saved)"♥ Saved" else "♡ Save") to onFav).forEach{(name,action)->
+    listOf("⬡ 3D" to onModel,"▣ AR Camera" to onAR,"📍 Map" to onMap,(if(saved)"♥ Saved" else "♡ Save") to onFav).forEach{(name,action)->
      GButton(name,action,Modifier.weight(1f))
     }
    }
@@ -446,7 +446,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   Row(Modifier.fillMaxWidth().padding(10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
    Outline("‹ Guide",back,Modifier.weight(1f))
    GButton("↻ Retry",retry,Modifier.weight(1f))
-   GButton("▣ AR",ar,Modifier.weight(1f))
+   GButton("▣ AR Camera",ar,Modifier.weight(1f))
   }
   Text("Drag to rotate  •  Pinch to zoom  •  3DGLB",color=Color.White,fontSize=12.sp,
     modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=12.dp))
@@ -464,14 +464,14 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    "4  Place the downloaded 3D model")){instruction->
    Panel(Modifier.fillMaxWidth()){Text(instruction,color=Ink)}
   }
-  item{GButton("Start Native AR",onStart,Modifier.fillMaxWidth())}
+  item{GButton("Start AR Camera",onStart,Modifier.fillMaxWidth())}
   item{Outline("Continue in 3D Viewer",onModel,Modifier.fillMaxWidth())}
   item{Outline("‹ Back",onBack,Modifier.fillMaxWidth())}
  }
 }
 @Composable private fun MapPage(ts:List<Temple>,onDirections:(Temple)->Unit,onDetail:(Temple)->Unit){
  LazyColumn(contentPadding=PaddingValues(bottom=20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-  item{Head("Bagan Map & Directions",7,"Location links open Google Maps. Interactive in-app maps require an API key.")}
+  item{Head("Bagan Map & Directions",7,"Directions open in Google Maps. An in-app live map requires a configured Maps API key.")}
   item{Panel(Modifier.fillMaxWidth().padding(horizontal=12.dp)){
    Box(Modifier.fillMaxWidth().height(170.dp).background(Color(0xFFDCF0DB),RoundedCornerShape(12.dp))) {
     Text("🗺",fontSize=65.sp,modifier=Modifier.align(Alignment.Center))
@@ -702,7 +702,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   item{Column(Modifier.fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally){
    Text("BAGAN",color=Navy,fontWeight=FontWeight.Black,fontSize=34.sp)
    Text("HERITAGE MUSEUM",color=Gold,fontSize=20.sp,fontWeight=FontWeight.Bold)
-   Text("Native Android • V3.5.2",color=Muted)
+   Text("Native Android • V3.5.3",color=Muted)
   }}
   item{Panel(Modifier.fillMaxWidth()){
    Text("Explore Bagan's ancient architectural heritage with native 3D models, AR, guides, favorites and offline caches.",color=Ink)
