@@ -72,6 +72,7 @@ fun BaganEntryFlow(
             }
             Button(onClick={
                 prefs.edit().putString("language",language).putBoolean("completed",true).apply()
+                context.getSharedPreferences("bagan_heritage_350",0).edit().putString("language",language).apply()
                 step=4
             },modifier=Modifier.fillMaxWidth().heightIn(min=52.dp),
                 colors=ButtonDefaults.buttonColors(containerColor=HeritageGold)) {
