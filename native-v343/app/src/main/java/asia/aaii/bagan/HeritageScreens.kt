@@ -149,26 +149,12 @@ fun BaganHeritageApp(
     }
     Text("⋮",color=Gold,fontSize=25.sp,modifier=Modifier.clickable{go(16)})
    }
-   // Navigation is deliberately at the TOP, below the title.
-   Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState()).padding(horizontal=5.dp,vertical=4.dp),
-     horizontalArrangement=Arrangement.spacedBy(2.dp)) {
-    listOf(2 to "⌂ Home",13 to "⌕ Search",22 to "▦ Categories",11 to "♧ Routes",23 to "♜ Museum",7 to "⌖ Map",5 to "⬡ 3D",6 to "▣ AR Camera",12 to "♡ Saved",26 to "♙ Profile",16 to "☰ Settings",27 to "⏻ Exit").forEach{(p,name)->
-     val isActive=p==route
-     Box(Modifier.background(if(isActive)Gold else Color.Transparent,RoundedCornerShape(8.dp))
-       .clickable {
-        if(p==5){ if(selected!=null)loadModel(selected!!) else go(3) }
-        else if(p==6){go(6)}
-        else go(p)
-       }.padding(horizontal=12.dp,vertical=9.dp)){
-      Text(name,color=if(isActive)Navy else SoftGold,fontWeight=FontWeight.Medium,fontSize=12.sp)
-     }
-    }
-   }
+
   }
-  Box(Modifier.fillMaxSize()){
+  Box(Modifier.weight(1f).fillMaxWidth()){
    when(route){
     1->Splash(onStart={go(2)})
-    2->Home(temples,onTemple={openTemple(it)},onNext={p-> if(p==5) selected?.let{loadModel(it)} ?: go(3) else go(p)})
+    2->V361Home(temples,onSearch={go(13)},onNavigate={p-> if(p==5) selected?.let{loadModel(it)} ?: go(3) else go(p)},onTemple={openTemple(it)})
     3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},{loadModel(it)},{onMap(it)},fav)
     4->TempleDetail(selected ?: temples.first(),infoTab,{infoTab=it},
       onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
@@ -200,6 +186,7 @@ fun BaganHeritageApp(
     27->ExitV357(onCancel={go(2)},onExit={(ctx as? android.app.Activity)?.finish()})
    }
   }
+  if(route!=1) V361BottomBar(route,onNavigate={go(it)})
  }
  if(showLang) AlertDialog(onDismissRequest={showLang=false},title={Text("Language / ဘာသာစကား")},
   text={Column {
