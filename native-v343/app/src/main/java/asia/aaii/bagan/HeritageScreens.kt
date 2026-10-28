@@ -373,8 +373,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   item{Art(Modifier.fillMaxWidth().height(225.dp),t.id.length)}
   item {
    Column(Modifier.padding(horizontal=14.dp)){
-    Text(t.nameEn,fontSize=24.sp,fontWeight=FontWeight.Black,color=Ink)
-    Text(t.nameMm,color=Muted)
+    Text(t.nameMm,fontSize=23.sp,fontWeight=FontWeight.Black,color=Ink)
+    Text(t.nameEn,color=Muted,fontSize=15.sp)
     Text("Bagan • Myanmar",fontSize=12.sp,color=Muted)
    }
   }
@@ -438,7 +438,11 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
      CircularProgressIndicator(color=Gold)
      Spacer(Modifier.height(12.dp))
      Text(if(timedOut)"3D renderer not ready" else "Preparing Native 3D…",color=Color.White)
-     if(timedOut)GButton("Try Offline Demo",demoClick)
+     if(timedOut){
+      Text("GLB model could not be rendered on this device.",color=Color.White,fontSize=12.sp)
+      Spacer(Modifier.height(8.dp))
+      GButton("Try Offline Demo",demoClick)
+     }
     }
    }
    if(demo)Text("OFFLINE DEMO — not the actual temple model",color=Gold,fontSize=10.sp,
@@ -449,16 +453,16 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    GButton("↻ Retry",retry,Modifier.weight(1f))
    GButton("▣ AR Camera",ar,Modifier.weight(1f))
   }
-  Text("Drag to rotate  •  Pinch to zoom  •  3DGLB",color=Color.White,fontSize=12.sp,
+  Text("Drag to rotate  •  Pinch to zoom  •  GLB 3D",color=Color.White,fontSize=12.sp,
     modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=12.dp))
  }
 }
 @Composable private fun ArInstructions(t:Temple?,onStart:()->Unit,onBack:()->Unit,onModel:()->Unit){
  LazyColumn(Modifier.fillMaxSize().background(Pale),contentPadding=PaddingValues(15.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-  item{Head("AR Mode",6,t?.nameEn ?: "Augmented Reality")}
+  item{Head("AR Camera / AR ကင်မရာ",6,t?.nameEn ?: "Augmented Reality")}
   item{Art(Modifier.fillMaxWidth().height(270.dp),7)}
   item{Panel(Modifier.fillMaxWidth()){
-   Text("Place a temple in your space",fontSize=19.sp,fontWeight=FontWeight.Bold,color=Ink)
+   Text("AR ဖြင့် ဘုရားပုံစံကို ကြည့်ရှုရန်",fontSize=19.sp,fontWeight=FontWeight.Bold,color=Ink)
    Text("AR requires a compatible Android phone, camera permission and Google Play Services for AR.",color=Muted)
   }}
   items(listOf("1  Allow camera permission","2  Point camera at a flat surface","3  Move the phone slowly to detect a plane",
@@ -472,7 +476,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
 }
 @Composable private fun MapPage(ts:List<Temple>,onDirections:(Temple)->Unit,onDetail:(Temple)->Unit){
  LazyColumn(contentPadding=PaddingValues(bottom=20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-  item{Head("Bagan Map & Directions",7,"Directions open in Google Maps. An in-app live map requires a configured Maps API key.")}
+  item{Head("Bagan Map / ပုဂံမြေပုံ",7,"Directions open in Google Maps. Live in-app maps require a Maps API key.")}
   item{Panel(Modifier.fillMaxWidth().padding(horizontal=12.dp)){
    Box(Modifier.fillMaxWidth().height(170.dp).background(Color(0xFFDCF0DB),RoundedCornerShape(12.dp))) {
     Text("🗺",fontSize=65.sp,modifier=Modifier.align(Alignment.Center))
