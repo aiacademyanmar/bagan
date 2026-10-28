@@ -47,9 +47,9 @@ class NativeARActivity:ComponentActivity() {
   val demoMode=intent.getBooleanExtra("demo_mode",false)
   setContent {
    MaterialTheme {
-    Column {
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
      Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){
-      TextButton(onClick={finish()}){Text("← Back")}
+      TextButton(onClick={finish()}){Text("← ပြန်သွားရန်")}
       Text(modelName,modifier=Modifier.padding(12.dp))
      }
      if(demoMode) Text("DEMO MODEL — not the original Bagan monument",modifier=Modifier.padding(horizontal=12.dp),color=MaterialTheme.colorScheme.error)
@@ -60,7 +60,7 @@ class NativeARActivity:ComponentActivity() {
       Text("AR အတွက် Camera Permission ခွင့်ပြုပါ",Modifier.padding(16.dp))
       Button(onClick={ask.launch(Manifest.permission.CAMERA)}){Text("Allow Camera")}
      }else if(modelUri==null){
-      Text("AR Model file missing",Modifier.padding(16.dp))
+      Text("AR Model မတွေ့ပါ။ 3D ဖိုင်ကို အရင် Download လုပ်ပါ။",Modifier.padding(16.dp))
      }else{
       var anchor by remember { mutableStateOf<Anchor?>(null) }
       var issue by remember { mutableStateOf<String?>(null) }
