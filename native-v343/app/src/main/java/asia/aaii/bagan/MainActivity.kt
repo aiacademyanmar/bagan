@@ -3,6 +3,9 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import java.util.Locale
+import com.google.ar.core.ArCoreApk
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
@@ -31,12 +34,28 @@ private val gold=Color(0xFFECC276)
 private val panel=Color(0xFF29354B)
 
 class MainActivity:ComponentActivity(){
+ private var speech: TextToSpeech? = null
+ private var speechReady = false
  override fun onCreate(savedInstanceState:Bundle?){
   super.onCreate(savedInstanceState)
+  speech = TextToSpeech(this) { status ->
+   speechReady = status == TextToSpeech.SUCCESS
+   if(speechReady) speech?.language = Locale.US
+  }
   val data=ModelRepository.catalog(this)
   setContent { MaterialTheme(colorScheme=darkColorScheme(primary=gold,background=night,surface=panel)){
-   BaganHeritageApp(data,{t->launchMap(t)},{t->launchAr(t)},{text->android.widget.Toast.makeText(this,text,android.widget.Toast.LENGTH_LONG).show()})
+   BaganHeritageApp(data,{t->launchMap(t)},{t->launchAr(t)},{text->speakGuide(text)})
   } }
+ }
+ private fun speakGuide(text:String){
+  if(speechReady) speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "bagan-guide")
+  else android.widget.Toast.makeText(this,"Text-to-Speech engine not ready. Check Android TTS settings.",android.widget.Toast.LENGTH_LONG).show()
+ }
+ override fun onDestroy(){
+  speech?.stop()
+  speech?.shutdown()
+  speech = null
+  super.onDestroy()
  }
  private fun launchMap(t:Temple){
   val uri=Uri.parse("https://www.google.com/maps/search/?api=1&query="+Uri.encode(t.nameEn+" Bagan Myanmar"))
@@ -44,6 +63,14 @@ class MainActivity:ComponentActivity(){
   catch(e:Exception){android.widget.Toast.makeText(this,"Map app unavailable",1).show()}
  }
  private fun launchAr(t:Temple){
+  val available=try {ArCoreApk.getInstance().checkAvailability(this)}
+    catch(e:Exception){null}
+  if(available?.isSupported != true){
+    AlertDialog.Builder(this).setTitle("ARCore မရနိုင်သေးပါ")
+      .setMessage("ဖုန်းမှာ Google Play Services for AR ပံ့ပိုးမှု မရှိသေးနိုင်ပါ။ Google Play Services for AR ကို စစ်ဆေးပါ။ 3D Model ကိုတော့ ပုံမှန်ကြည့်နိုင်ပါတယ်။")
+      .setPositiveButton("OK",null).show()
+    return
+  }
   val file=ModelRepository.cached(this,t)
   if(!file.exists()) {
     android.widget.Toast.makeText(this,"AR အတွက် မူရင်း GLB ကို Download အရင်လုပ်ပါ",android.widget.Toast.LENGTH_LONG).show()
