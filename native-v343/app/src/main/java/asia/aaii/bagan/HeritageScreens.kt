@@ -54,7 +54,7 @@ fun BaganHeritageApp(
  val ctx=LocalContext.current
  val prefs=remember {ctx.getSharedPreferences("bagan_heritage_350",0)}
  val scope=rememberCoroutineScope()
- var route by remember {mutableIntStateOf(1)}
+ var route by remember {mutableIntStateOf(2)}
  var selected by remember {mutableStateOf<Temple?>(temples.firstOrNull())}
  var fav by remember {mutableStateOf(prefs.getStringSet("fav",emptySet())!!.toSet())}
  var query by remember {mutableStateOf("")}
