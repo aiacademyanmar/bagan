@@ -19,7 +19,7 @@ android {
     targetCompatibility = JavaVersion.VERSION_17
   }
   kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
-  buildFeatures { compose = true }
+  buildFeatures { compose = true; buildConfig = true }
 }
 dependencies {
   implementation(platform("androidx.compose:compose-bom:2026.05.00"))
