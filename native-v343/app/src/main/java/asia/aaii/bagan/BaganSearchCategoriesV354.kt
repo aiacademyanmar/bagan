@@ -9,6 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 
@@ -33,7 +36,10 @@ fun V354Search(
     contentPadding=PaddingValues(bottom=20.dp)){
     items(matches){t->
       Card(colors=CardDefaults.cardColors(containerColor=Color.White)){
-        Column(Modifier.fillMaxWidth().padding(14.dp)){
+        Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically){
+          Image(painter=painterResource(id=R.drawable.bagan_illustration_1),contentDescription="Bagan illustration",modifier=Modifier.size(75.dp,78.dp),contentScale=ContentScale.Crop)
+          Spacer(Modifier.width(10.dp))
+          Column(Modifier.weight(1f)){
           Text(t.nameMm,fontSize=17.sp,fontWeight=FontWeight.Bold,color=BaganBrown)
           Text(t.nameEn,fontSize=12.sp,color=Color.DarkGray)
           Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){
@@ -41,6 +47,7 @@ fun V354Search(
             Button(onClick={onThreeD(t)},colors=ButtonDefaults.buttonColors(containerColor=BaganGold)){
               Text("View 3D")
             }
+          }
           }
         }
       }
@@ -69,7 +76,7 @@ fun V354Categories(
      Card(onClick={onCategory(key)},colors=CardDefaults.cardColors(containerColor=Color.White),
        modifier=Modifier.fillMaxWidth()){
        Row(Modifier.fillMaxWidth().padding(18.dp),verticalAlignment=Alignment.CenterVertically){
-         Text("♜",fontSize=30.sp,color=BaganGold)
+         Image(painter=painterResource(id=R.drawable.bagan_illustration_2),contentDescription=null,modifier=Modifier.size(64.dp),contentScale=ContentScale.Crop)
          Spacer(Modifier.width(14.dp))
          Column(Modifier.weight(1f)){
            Text(name,fontWeight=FontWeight.Bold,color=BaganBrown)
