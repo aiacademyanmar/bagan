@@ -64,7 +64,7 @@ fun BaganHeritageApp(
  var imageTab by remember {mutableStateOf("All")}
  var showLang by remember {mutableStateOf(false)}
  var language by remember {mutableStateOf(prefs.getString("language", "မြန်မာ") ?: "မြန်မာ")}
- var quality by remember {mutableStateOf("High")}
+ var fastMode by remember {mutableStateOf(prefs.getBoolean("fast_3d_mode",true))}
  var onlineOnly by remember {mutableStateOf(prefs.getBoolean("offline_mode",false))}
  var loadProgress by remember {mutableIntStateOf(0)}
  var modelFile by remember {mutableStateOf<String?>(null)}
@@ -161,7 +161,7 @@ fun BaganHeritageApp(
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
       onPage={go(it)})
     5->ModelScreen(selected,modelFile,modelDemo,{renderReady=true},
-      {selected?.let{loadModel(it)}},{demoModel()},{go(6)},{go(4)})
+      {selected?.let{loadModel(it)}},{demoModel()},{go(6)},{go(4)},fastMode)
     6->ArInstructions(selected,onStart={selected?.let{onAR(it)}},onBack={go(4)},onModel={selected?.let{loadModel(it)} ?: go(3)})
     7->MapPage(temples,onDirections={onMap(it)},onDetail={openTemple(it)})
     8->GalleryPage(selected,imageTab,{imageTab=it},onDetail={go(4)})
@@ -172,7 +172,7 @@ fun BaganHeritageApp(
     13->V354Search(temples,query,{query=it},onDetails={openTemple(it)},onThreeD={loadModel(it)})
     14->NearbyPage(temples,{onMap(it)},{openTemple(it)})
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)})
-    16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)})
+    16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)},fastMode=fastMode,onFastMode={fastMode=it;prefs.edit().putBoolean("fast_3d_mode",it).apply()})
     17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
     18->AboutV357(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
@@ -402,7 +402,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
 }
 @Composable private fun ModelScreen(
  t:Temple?, file:String?, demo:Boolean, ready:()->Unit,
- retry:()->Unit, demoClick:()->Unit, ar:()->Unit, back:()->Unit
+ retry:()->Unit, demoClick:()->Unit, ar:()->Unit, back:()->Unit,
+ fastMode:Boolean
 ){
  var rendered by remember(file){mutableStateOf(false)}
  var timedOut by remember(file){mutableStateOf(false)}
@@ -428,7 +429,12 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   Box(Modifier.weight(1f).fillMaxWidth()){
    if(file!=null){
     key(file) {
-     SceneView(modifier=Modifier.fillMaxSize()){
+     SceneView(
+      modifier=Modifier.fillMaxSize(),
+      renderQuality=if(fastMode) io.github.sceneview.RenderQuality.Performance
+        else io.github.sceneview.RenderQuality.Default,
+      fillLightNode=null
+     ){
       // IMPORTANT: SceneView's asset overload will not load an internal file:// GLB.
       // File locations must use the fileLocation overload. Bundled demo uses assets.
       val instance=if(file.startsWith("file:") || file.startsWith("content:") ||
@@ -438,7 +444,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
        rememberModelInstance(modelLoader=modelLoader,assetFileLocation=file)
       }
       instance?.let{inst->
-       ModelNode(modelInstance=inst,scaleToUnits=1.0f,autoAnimate=true,isEditable=true)
+       ModelNode(modelInstance=inst,scaleToUnits=1.0f,autoAnimate=!fastMode,isEditable=true)
        LaunchedEffect(inst){rendered=true;ready()}
       }
      }
@@ -471,7 +477,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    GButton("↻ Retry",retry,Modifier.weight(1f))
    GButton("AR Camera",ar,Modifier.weight(1f))
   }
-  Text("Drag to rotate  •  Pinch to zoom  •  GLB 3D",color=Color.White,fontSize=12.sp,
+  Text((if(fastMode)"FAST MODE  •  " else "QUALITY MODE  •  ") + "Drag to rotate  •  Pinch to zoom",color=Color.White,fontSize=12.sp,
    modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=12.dp))
  }
 }
