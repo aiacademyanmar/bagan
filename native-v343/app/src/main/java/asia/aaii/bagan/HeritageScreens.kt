@@ -76,7 +76,7 @@ fun BaganHeritageApp(
  var bulkStatus by remember {mutableStateOf("")}
 
  fun go(n:Int) { route=n.coerceIn(1,27) }
- BackHandler(enabled=route!=2 && route!=27) { go(2) }
+ BackHandler(enabled=route!=2 && route!=27) { go(when(route){4->3;5,6,8,10,19,20->4;24->23;17,21,26->16;else->2}) }
  fun openTemple(t:Temple){selected=t;go(4)}
  fun favorite(t:Temple){
   fav=if(t.id in fav)fav-t.id else fav+t.id
@@ -186,7 +186,7 @@ fun BaganHeritageApp(
     27->ExitV357(onCancel={go(2)},onExit={(ctx as? android.app.Activity)?.finish()})
    }
   }
-  if(route!=1) V361BottomBar(route,onNavigate={go(it)})
+  if(route!=1 && route!=5 && route!=6 && route!=19 && route!=20 && route!=27) V361BottomBar(route,onNavigate={go(it)})
  }
  if(showLang) AlertDialog(onDismissRequest={showLang=false},title={Text("Language / ဘာသာစကား")},
   text={Column {
@@ -351,7 +351,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
     singleLine=true,placeholder={Text("Search pagodas…")},leadingIcon={Text("⌕")})
   PillGroup(listOf("All","Famous","Temples","Stupas"),cat,setCat)
   val shown=ts.filter{(search.isBlank()||it.nameEn.contains(search,true)||it.nameMm.contains(search,true)) &&
-    (cat=="All"||cat=="Famous"||(cat=="Temples"&&it.nameEn.contains("temple",true))||(cat=="Stupas"&&!it.nameEn.contains("temple",true)))}
+    (cat=="All"||(cat=="Famous"&&ts.indexOf(it) in 0..5)||(cat=="Temples"&&it.nameEn.contains("temple",true))||(cat=="Stupas"&&(it.nameEn.contains("pagoda",true)||it.nameEn.contains("stupa",true))))}
   LazyColumn(contentPadding=PaddingValues(bottom=15.dp)){
    items(shown){t->TempleItem(t,ts.indexOf(t),t.id in favs,{open(t)},{favorite(t)},{model(t)},{map(t)})}
   }
