@@ -66,7 +66,7 @@ private val ivoryV357=Color(0xFFFFF7EA)
  LazyColumn(Modifier.fillMaxSize().background(ivoryV357),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
   item{TitleV357("အက်ပ်အကြောင်း","About")}
   item{Text("BAGAN HERITAGE MUSEUM",fontWeight=FontWeight.Black,fontSize=24.sp,color=darkBlue)}
-  item{Text("Version 3.5.7 • AAII.ASIA",color=goldV357)}
+  item{Text("Version ${BuildConfig.VERSION_NAME} • AAII.ASIA",color=goldV357)}
   item{Text("ပုဂံအမွေအနှစ်များကို သမိုင်း၊ 3D၊ AR နှင့် မြေပုံများဖြင့် လေ့လာနိုင်ရန် ရည်ရွယ်ထားသော ဒစ်ဂျစ်တယ်လေ့လာရေးအက်ပ် ဖြစ်ပါသည်။",color=darkBlue)}
   item{Text("တရားဝင်ပြတိုက်၏ ကိုယ်စားပြုအက်ပ်မဟုတ်ပါ။",fontSize=12.sp,color=Color.DarkGray)}
   item{ActionV357("ပင်မစာမျက်နှာ","Home",onHome)}
