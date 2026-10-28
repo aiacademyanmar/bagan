@@ -29,6 +29,12 @@ class NativeARActivity:ComponentActivity() {
  override fun onResume(){
   super.onResume()
   try {
+   val available=ArCoreApk.getInstance().checkAvailability(this)
+   if(!available.isSupported){
+    arReady=false
+    installMessage=if(available.isTransient) "ARCore ကို စစ်ဆေးနေဆဲဖြစ်ပါသည်။ ပြန်လည်ကြိုးစားပါ။" else "ဤဖုန်းတွင် ARCore မရနိုင်ပါ။ 3D Viewer ကို အသုံးပြုနိုင်ပါသည်။"
+    return
+   }
    val result=ArCoreApk.getInstance().requestInstall(this,!installAsked)
    installAsked=true
    arReady=result==ArCoreApk.InstallStatus.INSTALLED
@@ -42,7 +48,10 @@ class NativeARActivity:ComponentActivity() {
  override fun onCreate(savedInstanceState:Bundle?){
   super.onCreate(savedInstanceState)
   permitted=ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED
-  val modelUri=intent.getStringExtra("file_uri")
+  val modelUri=intent.getStringExtra("file_uri")?.takeIf { uri ->
+   try { uri.startsWith("file:") && java.io.File(android.net.Uri.parse(uri).path ?: "").let { it.exists() && it.isFile } }
+   catch (_: Exception) { false }
+  }
   val modelName=intent.getStringExtra("model_name") ?: "Bagan Temple"
   val demoMode=intent.getBooleanExtra("demo_mode",false)
   setContent {
@@ -70,9 +79,11 @@ class NativeARActivity:ComponentActivity() {
         onSessionFailed={error->issue=error.localizedMessage ?: "ARCore session failed"},
         onSessionUpdated={_,frame->
           if(anchor==null) {
-           anchor=frame.getUpdatedTrackables(Plane::class.java)
-             .firstOrNull {it.type==Plane.Type.HORIZONTAL_UPWARD_FACING}
-             ?.let { plane -> plane.createAnchor(plane.centerPose) }
+           try {
+            anchor=frame.getUpdatedTrackables(Plane::class.java)
+              .firstOrNull {it.type==Plane.Type.HORIZONTAL_UPWARD_FACING && it.trackingState==com.google.ar.core.TrackingState.TRACKING}
+              ?.let { plane -> plane.createAnchor(plane.centerPose) }
+           }catch(e:Exception){issue=e.localizedMessage ?: "AR plane tracking failed"}
           }
         }
        ) {
