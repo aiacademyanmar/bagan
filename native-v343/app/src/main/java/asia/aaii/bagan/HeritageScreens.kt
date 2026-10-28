@@ -74,7 +74,7 @@ fun BaganHeritageApp(
  var bulkStart by remember {mutableIntStateOf(0)}
  var bulkStatus by remember {mutableStateOf("")}
 
- fun go(n:Int) { route=n.coerceIn(1,25) }
+ fun go(n:Int) { route=n.coerceIn(1,27) }
  fun openTemple(t:Temple){selected=t;go(4)}
  fun favorite(t:Temple){
   fav=if(t.id in fav)fav-t.id else fav+t.id
@@ -150,7 +150,7 @@ fun BaganHeritageApp(
    // Navigation is deliberately at the TOP, below the title.
    Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState()).padding(horizontal=5.dp,vertical=4.dp),
      horizontalArrangement=Arrangement.spacedBy(2.dp)) {
-    listOf(2 to "⌂ Home",13 to "⌕ Search",22 to "▦ Categories",11 to "♧ Routes",23 to "♜ Museum",7 to "⌖ Map",5 to "⬡ 3D",6 to "▣ AR Camera",12 to "♡ Saved",16 to "☰ Settings").forEach{(p,name)->
+    listOf(2 to "⌂ Home",13 to "⌕ Search",22 to "▦ Categories",11 to "♧ Routes",23 to "♜ Museum",7 to "⌖ Map",5 to "⬡ 3D",6 to "▣ AR Camera",12 to "♡ Saved",26 to "♙ Profile",16 to "☰ Settings",27 to "⏻ Exit").forEach{(p,name)->
      val isActive=p==route
      Box(Modifier.background(if(isActive)Gold else Color.Transparent,RoundedCornerShape(8.dp))
        .clickable {
@@ -184,13 +184,9 @@ fun BaganHeritageApp(
     13->V354Search(temples,query,{query=it},onDetails={openTemple(it)},onThreeD={loadModel(it)})
     14->NearbyPage(temples,{onMap(it)},{openTemple(it)})
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)})
-    16->SettingsPage(language,quality,onlineOnly,{showLang=true},{quality=it},{onlineOnly=it},
-      onDiagnostics={go(21)},onClear={
-       java.io.File(ctx.filesDir,"models").listFiles()?.forEach{it.delete()}
-       bulkStatus="Cached model files removed"
-      },onHelp={go(17)},onAbout={go(18)})
-    17->HelpPage(onNavigate={go(it)})
-    18->AboutPage(onHome={go(2)})
+    16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)})
+    17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
+    18->AboutV357(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
     20->ErrorPage(loadError,onRetry={selected?.let{loadModel(it)}},onDemo={demoModel()},onBack={go(3)})
     21->BaganDiagnosticsScreen(temples,onBack={go(16)})
@@ -198,6 +194,8 @@ fun BaganHeritageApp(
     23->MuseumInfoV356(onHistory={go(9)},onArtifacts={go(24)})
     24->ArtifactsV356(onBack={go(23)})
     25->RelatedPage(temples,selected,onSelect={openTemple(it)})
+    26->ProfileV357(savedCount=fav.size,onFavorites={go(12)},onHome={go(2)})
+    27->ExitV357(onCancel={go(2)},onExit={(ctx as? android.app.Activity)?.finish()})
    }
   }
  }
