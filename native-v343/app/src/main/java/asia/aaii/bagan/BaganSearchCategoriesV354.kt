@@ -64,7 +64,7 @@ fun V354Categories(
    Triple("All","အားလုံး",temples.size),
    Triple("Famous","ထင်ရှားသောဘုရားများ",temples.take(6).size),
    Triple("Temples","ဂူဘုရားများ",temples.count{it.nameEn.contains("temple",true)}),
-   Triple("Stupas","စေတီပုထိုးများ",temples.count{!it.nameEn.contains("temple",true)})
+   Triple("Stupas","စေတီပုထိုးများ",temples.count{it.nameEn.contains("pagoda",true)||it.nameEn.contains("stupa",true)})
  )
  LazyColumn(Modifier.fillMaxSize().background(BaganCream),
    contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
