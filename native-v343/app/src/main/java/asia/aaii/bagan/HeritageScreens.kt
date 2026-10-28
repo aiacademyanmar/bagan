@@ -82,6 +82,18 @@ fun BaganHeritageApp(
  }
  fun loadModel(t:Temple){
   selected=t; modelFile=null; modelDemo=false; loadError="";loadProgress=0; renderReady=false
+  if(onlineOnly){
+   try {
+    val cached=ModelRepository.cached(ctx,t)
+    ModelRepository.validate(cached)
+    modelFile=Uri.fromFile(cached).toString()
+    go(5)
+   } catch(e:Exception){
+    loadError="Offline Mode: ${t.nameEn} is not downloaded. Switch off Offline Mode in Settings and download the GLB first."
+    go(20)
+   }
+   return
+  }
   retryCount++;go(19)
  }
  fun demoModel(){
@@ -108,6 +120,10 @@ fun BaganHeritageApp(
  }
  LaunchedEffect(bulkStart) {
   if(bulkStart>0){
+   if(onlineOnly){
+    bulkStatus="Offline Mode is ON. Disable it in Settings to download models."
+    return@LaunchedEffect
+   }
    bulkStatus="Downloading models..."
    var ok=0
    withContext(Dispatchers.IO){
@@ -150,15 +166,15 @@ fun BaganHeritageApp(
   Box(Modifier.fillMaxSize()){
    when(route){
     1->Splash(onStart={go(2)})
-    2->Home(temples,onTemple={openTemple(it)},onNext={go(it)})
-    3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},fav)
+    2->Home(temples,onTemple={openTemple(it)},onNext={p-> if(p==5) selected?.let{loadModel(it)} ?: go(3) else go(p)})
+    3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},{loadModel(it)},{onMap(it)},fav)
     4->TempleDetail(selected ?: temples.first(),infoTab,{infoTab=it},
       onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
       onPage={go(it)})
     5->ModelScreen(selected,modelFile,modelDemo,{renderReady=true},
       {selected?.let{loadModel(it)}},{demoModel()},{go(6)},{go(4)})
-    6->ArInstructions(selected,onStart={selected?.let{onAR(it)}},onBack={go(4)},onModel={go(5)})
+    6->ArInstructions(selected,onStart={selected?.let{onAR(it)}},onBack={go(4)},onModel={selected?.let{loadModel(it)} ?: go(3)})
     7->MapPage(temples,onDirections={onMap(it)},onDetail={openTemple(it)})
     8->GalleryPage(selected,imageTab,{imageTab=it},onDetail={go(4)})
     9->HistoryPage(selected,onSpeak={onSpeak(it)},onBack={go(4)})
@@ -336,7 +352,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  }
 }
 @Composable private fun PagodaList(ts:List<Temple>,search:String,setSearch:(String)->Unit,cat:String,setCat:(String)->Unit,
- open:(Temple)->Unit,favorite:(Temple)->Unit,favs:Set<String>){
+ open:(Temple)->Unit,favorite:(Temple)->Unit,model:(Temple)->Unit,map:(Temple)->Unit,favs:Set<String>){
  Column {
   Head("Pagodas List",3,"ဘုရားပုထိုးများ • ${ts.size} 3D catalog entries")
   OutlinedTextField(search,setSearch,modifier=Modifier.fillMaxWidth().padding(horizontal=13.dp),
@@ -345,7 +361,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   val shown=ts.filter{(search.isBlank()||it.nameEn.contains(search,true)||it.nameMm.contains(search,true)) &&
     (cat=="All"||cat=="Famous"||(cat=="Temples"&&it.nameEn.contains("temple",true))||(cat=="Stupas"&&!it.nameEn.contains("temple",true)))}
   LazyColumn(contentPadding=PaddingValues(bottom=15.dp)){
-   items(shown){t->TempleItem(t,ts.indexOf(t),t.id in favs,{open(t)},{favorite(t)},{open(t)},{open(t)})}
+   items(shown){t->TempleItem(t,ts.indexOf(t),t.id in favs,{open(t)},{favorite(t)},{model(t)},{map(t)})}
   }
  }
 }
