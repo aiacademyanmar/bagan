@@ -74,7 +74,7 @@ fun BaganHeritageApp(
  var bulkStart by remember {mutableIntStateOf(0)}
  var bulkStatus by remember {mutableStateOf("")}
 
- fun go(n:Int) { route=n.coerceIn(1,20) }
+ fun go(n:Int) { route=n.coerceIn(1,21) }
  fun openTemple(t:Temple){selected=t;go(4)}
  fun favorite(t:Temple){
   fav=if(t.id in fav)fav-t.id else fav+t.id
@@ -185,7 +185,7 @@ fun BaganHeritageApp(
     14->NearbyPage(temples,{onMap(it)},{openTemple(it)})
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)})
     16->SettingsPage(language,quality,onlineOnly,{showLang=true},{quality=it},{onlineOnly=it},
-      onClear={
+      onDiagnostics={go(21)},onClear={
        java.io.File(ctx.filesDir,"models").listFiles()?.forEach{it.delete()}
        bulkStatus="Cached model files removed"
       },onHelp={go(17)},onAbout={go(18)})
@@ -193,6 +193,7 @@ fun BaganHeritageApp(
     18->AboutPage(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
     20->ErrorPage(loadError,onRetry={selected?.let{loadModel(it)}},onDemo={demoModel()},onBack={go(3)})
+    21->BaganDiagnosticsScreen(temples,onBack={go(16)})
    }
   }
  }
@@ -645,7 +646,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  }
 }
 @Composable private fun SettingsPage(language:String,quality:String,offline:Boolean,onLang:()->Unit,onQuality:(String)->Unit,
- onOffline:(Boolean)->Unit,onClear:()->Unit,onHelp:()->Unit,onAbout:()->Unit){
+ onOffline:(Boolean)->Unit,onDiagnostics:()->Unit,onClear:()->Unit,onHelp:()->Unit,onAbout:()->Unit){
  var showQuality by remember{mutableStateOf(false)}
  LazyColumn(contentPadding=PaddingValues(14.dp),verticalArrangement=Arrangement.spacedBy(13.dp)){
   item{Head("Settings",16,"App settings & content")}
@@ -667,6 +668,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    Text("Demo model remains bundled in the APK.",color=Muted,fontSize=12.sp)
   }}
   item{Panel(Modifier.fillMaxWidth()){
+   Outline("3D / AR Diagnostics",onDiagnostics,Modifier.fillMaxWidth())
+   Spacer(Modifier.height(9.dp))
    Outline("Help & User Guide",onHelp,Modifier.fillMaxWidth())
    Spacer(Modifier.height(9.dp))
    Outline("About Bagan",onAbout,Modifier.fillMaxWidth())
@@ -699,7 +702,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   item{Column(Modifier.fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally){
    Text("BAGAN",color=Navy,fontWeight=FontWeight.Black,fontSize=34.sp)
    Text("HERITAGE MUSEUM",color=Gold,fontSize=20.sp,fontWeight=FontWeight.Bold)
-   Text("Native Android • V3.5.0",color=Muted)
+   Text("Native Android • V3.5.2",color=Muted)
   }}
   item{Panel(Modifier.fillMaxWidth()){
    Text("Explore Bagan's ancient architectural heritage with native 3D models, AR, guides, favorites and offline caches.",color=Ink)
