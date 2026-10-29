@@ -24,6 +24,12 @@ import androidx.compose.ui.unit.*
 import io.github.sceneview.SceneView
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberModelInstance
+import io.github.sceneview.rememberEngine
+import io.github.sceneview.rememberCameraManipulator
+import io.github.sceneview.rememberMainLightNode
+import io.github.sceneview.rememberFillLightNode
+import io.github.sceneview.math.Position
+import io.github.sceneview.math.Rotation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
@@ -423,9 +429,20 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  onFastModeChange:(Boolean)->Unit
 ){
  var touch360 by remember(t?.id){mutableStateOf(false)}
+ var cameraPreset by remember(t?.id){mutableStateOf("Angle")}
+ var lightPreset by remember(t?.id){mutableStateOf("Balanced")}
+ var autoRotate by remember(t?.id){mutableStateOf(false)}
+ var spin by remember(file){mutableFloatStateOf(0f)}
  var rendered by remember(file){mutableStateOf(false)}
  var timedOut by remember(file){mutableStateOf(false)}
  var fallbackStarted by remember(file){mutableStateOf(false)}
+ // Deliberately low-cost capped rotation loop. OFF by default to preserve battery.
+ LaunchedEffect(autoRotate,rendered,file){
+  while(autoRotate && rendered){
+   kotlinx.coroutines.delay(50L)
+   spin=(spin+0.75f)%360f
+  }
+ }
  // If a downloaded GLB fails to decode, return to a known, bundled asset.
  LaunchedEffect(file){
   if(file!=null){
@@ -491,17 +508,64 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    }
    Text(if(rendered)"READY" else if(timedOut)"RETRY" else "LOADING",color=if(rendered)Color(0xFF8BE1A6) else Gold,fontSize=10.sp)
   }
+
+  Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState())
+    .padding(horizontal=8.dp,vertical=5.dp),horizontalArrangement=Arrangement.spacedBy(7.dp),
+    verticalAlignment=Alignment.CenterVertically){
+   Text("Camera",color=SoftGold,fontSize=11.sp)
+   listOf("Angle","Front","Top").forEach{choice->
+    Box(Modifier.background(if(cameraPreset==choice)Gold else Color(0xFF31465C),RoundedCornerShape(8.dp))
+     .clickable{cameraPreset=choice}.padding(horizontal=12.dp,vertical=7.dp)){
+     Text(choice,color=if(cameraPreset==choice)Navy else Color.White,fontSize=11.sp)
+    }
+   }
+   Text("Light",color=SoftGold,fontSize=11.sp)
+   listOf("Balanced","Bright","Soft").forEach{choice->
+    Box(Modifier.background(if(lightPreset==choice)Gold else Color(0xFF31465C),RoundedCornerShape(8.dp))
+     .clickable{lightPreset=choice}.padding(horizontal=12.dp,vertical=7.dp)){
+     Text(choice,color=if(lightPreset==choice)Navy else Color.White,fontSize=11.sp)
+    }
+   }
+  }
+  Row(Modifier.fillMaxWidth().background(Navy2).padding(horizontal=12.dp,vertical=4.dp),
+    horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){
+   Row(verticalAlignment=Alignment.CenterVertically){
+    Text("Auto Rotate",color=SoftGold,fontSize=12.sp)
+    Spacer(Modifier.width(8.dp))
+    Switch(checked=autoRotate,onCheckedChange={autoRotate=it},
+      modifier=Modifier.height(30.dp))
+   }
+   TextButton(onClick={cameraPreset="Angle";lightPreset="Balanced";autoRotate=false;spin=0f}){
+    Text("Reset View",color=Gold,fontSize=12.sp)
+   }
+  }
   if(touch360) Text("360° Touch Mode: Drag the model to rotate • Pinch to zoom",
      color=SoftGold,fontSize=11.sp,modifier=Modifier.fillMaxWidth().background(Navy).padding(8.dp),
      textAlign=TextAlign.Center)
   Box(Modifier.weight(1f).fillMaxWidth()){
    if(file!=null){
-    key(file) {
+    key(file,cameraPreset) {
+     val engine=rememberEngine()
+     val eye=remember(cameraPreset) {
+      when(cameraPreset) {
+       "Front" -> Position(x=0f,y=0.5f,z=3.4f)
+       "Top" -> Position(x=0.12f,y=3.3f,z=0.7f)
+       else -> Position(x=1.75f,y=1.15f,z=3.0f)
+      }
+     }
+     val target=remember { Position(x=0f,y=0f,z=0f) }
      SceneView(
       modifier=Modifier.fillMaxSize(),
+      engine=engine,
+      cameraManipulator=rememberCameraManipulator(orbitHomePosition=eye,targetPosition=target),
       renderQuality=if(fastMode) io.github.sceneview.RenderQuality.Performance
         else io.github.sceneview.RenderQuality.Default,
-      fillLightNode=null
+      mainLightNode=rememberMainLightNode(engine) {
+       intensity=when(lightPreset){"Bright"->110000f;"Soft"->42000f;else->76000f}
+      },
+      fillLightNode=if(fastMode) null else rememberFillLightNode(engine) {
+       intensity=when(lightPreset){"Bright"->42000f;"Soft"->16000f;else->27000f}
+      }
      ){
       // IMPORTANT: SceneView's asset overload will not load an internal file:// GLB.
       // File locations must use the fileLocation overload. Bundled demo uses assets.
@@ -512,7 +576,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
        rememberModelInstance(modelLoader=modelLoader,assetFileLocation=file)
       }
       instance?.let{inst->
-       ModelNode(modelInstance=inst,scaleToUnits=1.0f,autoAnimate=!fastMode,isEditable=true)
+       ModelNode(modelInstance=inst,scaleToUnits=1.0f,autoAnimate=false,
+         rotation=Rotation(y=spin),isEditable=true)
        LaunchedEffect(inst){rendered=true;ready()}
       }
      }
