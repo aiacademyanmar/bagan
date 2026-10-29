@@ -1,0 +1,54 @@
+name: Publish Bagan Native APK Direct Download
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-bagan-apk-v379.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-bagan-v379
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses >/dev/null || true
+      - name: Install SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Verify Android source
+        run: |
+          grep -q 'versionName = "3.7.9"' native-v343/app/build.gradle.kts
+          test -e native-v343/app/src/main/java/asia/aaii/bagan/NativeARActivity.kt
+      - name: Compile release deliverable
+        working-directory: native-v343
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+      - name: Copy and verify APK
+        run: |
+          cp native-v343/app/build/outputs/apk/debug/app-debug.apk Bagan-Heritage-V3.7.9.apk
+          unzip -t Bagan-Heritage-V3.7.9.apk | tail -1
+          sha256sum Bagan-Heritage-V3.7.9.apk > Bagan-Heritage-V3.7.9.apk.sha256
+      - name: Publish direct download to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view v3.7.9 >/dev/null 2>&1; then
+            gh release create v3.7.9 --title "BAGAN Heritage Museum V3.7.9 — Lightweight CGI AR" \
+              --notes "Native Android debug APK. AR supports 13 bundled lightweight CGI models, plane tracking, manual Place Model and Reset. Phone-level ARCore performance remains to be verified."
+          fi
+          gh release upload v3.7.9 Bagan-Heritage-V3.7.9.apk Bagan-Heritage-V3.7.9.apk.sha256 --clobber
