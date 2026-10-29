@@ -125,39 +125,34 @@ class MainActivity : ComponentActivity() {
 
     private fun launchAr(t: Temple) {
         val available = try { ArCoreApk.getInstance().checkAvailability(this) }
-            catch (e: Exception) { null }
+            catch (_: Exception) { null }
         if (available?.isSupported != true) {
             AlertDialog.Builder(this)
-                .setTitle("AR Camera")
-                .setMessage("ဤ Samsung ဖုန်းတွင် ARCore မရနိုင်သေးပါ။ 3D Viewer ကို အသုံးပြုနိုင်ပါသည်။")
-                .setPositiveButton("OK", null).show()
+                .setTitle("ARCore not ready")
+                .setMessage(if(available?.isTransient == true)
+                    "ARCore is checking availability. Try again in a moment."
+                    else "ဤဖုန်းမှာ ARCore ပံ့ပိုးမှု မရှိနိုင်ပါ။ 3D Viewer ကို သုံးနိုင်ပါတယ်။")
+                .setPositiveButton("OK",null).show()
             return
         }
-        val cached = ModelRepository.cached(this, t)
-        val actual = try { ModelRepository.validate(cached); true } catch (_: Exception) { false }
-        val source = if (actual) cached else try { ModelRepository.demo(this) } catch (e: Exception) {
-            AlertDialog.Builder(this).setTitle("3D File Error")
-                .setMessage(e.localizedMessage ?: "GLB file unavailable")
-                .setPositiveButton("OK", null).show()
-            return
-        }
-        val open = {
-            try {
-                startActivity(Intent(this, NativeARActivity::class.java)
-                    .putExtra("file_uri", Uri.fromFile(source).toString())
-                    .putExtra("model_name", if (actual) t.nameMm else "Bagan Demo Pagoda")
-                    .putExtra("demo_mode", !actual))
-            } catch (e: Exception) {
-                AlertDialog.Builder(this).setTitle("AR Camera Error")
-                    .setMessage(e.localizedMessage ?: "AR Camera unavailable")
-                    .setPositiveButton("OK", null).show()
+        val source = try { ModelRepository.lightweightAr(this, t) }
+            catch(e:Exception) {
+                AlertDialog.Builder(this).setTitle("Lightweight AR CGI Error")
+                    .setMessage(e.localizedMessage ?: "CGI GLB cannot be loaded")
+                    .setPositiveButton("OK",null).show()
+                return
             }
+        try {
+            startActivity(Intent(this, NativeARActivity::class.java)
+                .putExtra("file_uri",Uri.fromFile(source).toString())
+                .putExtra("model_name",t.nameMm)
+                .putExtra("demo_mode",true)
+                .putExtra("lightweight_cgi",true))
+        }catch(e:Exception){
+            AlertDialog.Builder(this).setTitle("AR Camera Error")
+                .setMessage(e.localizedMessage ?: "AR camera unavailable")
+                .setPositiveButton("OK",null).show()
         }
-        if (actual) open() else AlertDialog.Builder(this)
-            .setTitle("Demo 3D")
-            .setMessage("မူရင်း GLB ဖိုင်မရှိသေးပါ။ နမူနာပုံစံဖြင့် AR ကြည့်မလား။")
-            .setPositiveButton("ဖွင့်ရန်") { _, _ -> open() }
-            .setNegativeButton("မဖွင့်ပါ", null).show()
     }
 }
 
