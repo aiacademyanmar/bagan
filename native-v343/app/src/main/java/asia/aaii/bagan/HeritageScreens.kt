@@ -2,6 +2,8 @@
 package asia.aaii.bagan
 
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -82,6 +84,28 @@ fun BaganHeritageApp(
  var retryCount by remember {mutableIntStateOf(0)}
  var bulkStart by remember {mutableIntStateOf(0)}
  var bulkStatus by remember {mutableStateOf("")}
+ var offlineRevision by remember {mutableIntStateOf(0)}
+ var importBusy by remember {mutableStateOf(false)}
+ val zipPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri->
+  if(uri!=null){
+   scope.launch{
+    importBusy=true
+    bulkStatus="Importing authentic GLB models…"
+    try{
+     val count=withContext(Dispatchers.IO){
+      ModelRepository.importAuthenticZip(ctx,uri){done,total->
+       (ctx as? android.app.Activity)?.runOnUiThread{
+        bulkStatus="Verified $done / $total authentic GLB files"
+       }
+      }
+     }
+     offlineRevision++
+     bulkStatus="Imported $count authentic GLB files. Open a pagoda in 3D."
+    }catch(e:Exception){bulkStatus="Import failed: "+(e.localizedMessage ?: "Invalid ZIP")}
+    finally{importBusy=false}
+   }
+  }
+ }
 
  fun go(n:Int) { route=n.coerceIn(1,27) }
  BackHandler(enabled=route!=2 && route!=27) { go(when(route){4->3;5,6,8,10,19,20->4;24->23;17,21,26->16;else->2}) }
@@ -213,7 +237,9 @@ fun BaganHeritageApp(
     12->FavoritesV356(temples.filter{it.id in fav},details={openTemple(it)},remove={favorite(it)})
     13->V354Search(temples,query,{query=it},onDetails={openTemple(it)},onThreeD={loadModel(it)})
     14->NearbyPage(temples,{onMap(it)},{openTemple(it)})
-    15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)})
+    15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)},
+      onImport={zipPicker.launch(arrayOf("application/zip","application/octet-stream"))},
+      importing=importBusy,refresh=offlineRevision)
     16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)},fastMode=fastMode,onFastMode={fastMode=it;prefs.edit().putBoolean("fast_3d_mode",it).apply()})
     17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
     18->AboutV357(onHome={go(2)})
@@ -804,13 +830,20 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   }
  }
 }
-@Composable private fun OfflinePage(ts:List<Temple>,status:String,onBatch:()->Unit,onView:(Temple)->Unit){
+@Composable private fun OfflinePage(ts:List<Temple>,status:String,onBatch:()->Unit,onView:(Temple)->Unit,
+ onImport:()->Unit,importing:Boolean,refresh:Int){
  val ctx=LocalContext.current
  val cached=ts.count{ModelRepository.cached(ctx,it).exists()}
+ val authentic=remember(refresh){ts.count{t->
+  try{ModelRepository.validate(ModelRepository.authenticCached(ctx,t));true}catch(_:Exception){false}
+ }}
  LazyColumn(contentPadding=PaddingValues(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
   item{Head("Offline Model Library",15,"Download & cache GLBs from cPanel")}
   item{Panel(Modifier.fillMaxWidth()){
-   Text("Offline models ready: $cached / ${ts.size}",fontWeight=FontWeight.Bold,color=Ink)
+   Text("Authentic Bagan GLBs: $authentic / ${ts.size}",fontWeight=FontWeight.Bold,color=Ink)
+   Text("Original GLBs cached: $cached / ${ts.size}",color=Muted,fontSize=12.sp)
+   GButton("Import Authentic GLB ZIP (Offline)",onImport,Modifier.fillMaxWidth())
+   if(importing)CircularProgressIndicator(color=Gold,modifier=Modifier.size(24.dp))
    LinearProgressIndicator(progress={if(ts.isEmpty())0f else cached.toFloat()/ts.size},
      modifier=Modifier.fillMaxWidth().padding(vertical=11.dp))
    if(status.isNotEmpty())Text(status,color=Muted,fontSize=12.sp)
@@ -822,7 +855,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
      Text("⬡",fontSize=24.sp,color=Gold)
      Column(Modifier.weight(1f).padding(start=9.dp)){
       Text(t.nameEn,color=Ink,fontWeight=FontWeight.Bold)
-      Text(if(ModelRepository.cached(ctx,t).exists())"Cached" else "Not downloaded",color=Muted,fontSize=11.sp)
+      Text(if(ModelRepository.authenticCached(ctx,t).exists())"Authentic GLB cached" else if(ModelRepository.cached(ctx,t).exists())"Original cached" else "Not downloaded",color=Muted,fontSize=11.sp)
      }
      GButton("View / ↓",{onView(t)})
     }
