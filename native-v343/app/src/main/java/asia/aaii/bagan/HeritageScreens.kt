@@ -15,6 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
@@ -203,7 +206,7 @@ fun BaganHeritageApp(
   if(route!=1){
    Row(Modifier.fillMaxWidth().background(Navy).padding(horizontal=15.dp,vertical=9.dp),
        verticalAlignment=Alignment.CenterVertically) {
-    Text("♜",fontSize=30.sp,color=Gold)
+    Image(painter=painterResource(id=R.drawable.bagan_logo),contentDescription="BAGAN Heritage Museum Logo",modifier=Modifier.size(43.dp).clip(RoundedCornerShape(10.dp)),contentScale=ContentScale.Crop)
     Spacer(Modifier.width(8.dp))
     Column(Modifier.weight(1f)) {
      Text("BAGAN",fontSize=24.sp,fontWeight=FontWeight.Black,color=SoftGold,letterSpacing=2.sp)
@@ -354,7 +357,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    verticalArrangement=Arrangement.SpaceBetween,horizontalAlignment=Alignment.CenterHorizontally){
    Spacer(Modifier.height(24.dp))
    Column(horizontalAlignment=Alignment.CenterHorizontally){
-    Text("♜",fontSize=60.sp,color=Gold)
+    Image(painter=painterResource(id=R.drawable.bagan_logo),contentDescription="BAGAN Heritage Museum Logo",modifier=Modifier.size(166.dp).clip(RoundedCornerShape(16.dp)),contentScale=ContentScale.Fit)
     Text("BAGAN",fontSize=52.sp,fontWeight=FontWeight.Black,letterSpacing=3.sp,color=SoftGold)
     Text("HERITAGE MUSEUM",fontSize=20.sp,color=SoftGold,letterSpacing=2.sp)
     Text("Explore  •  Learn  •  3D  •  AR",fontSize=13.sp,color=Color.White)
