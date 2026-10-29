@@ -1,0 +1,83 @@
+{
+  "folder": "https://drive.google.com/drive/folders/1d9vs81uKgfKc9xcfaTmIBnN5J0-o2nCG",
+  "models": [
+    {
+      "id": "shwezigon",
+      "file": "Shwezigon_Pagoda.glb",
+      "driveId": "1Q_veLIGE00yUxV9UNINYXoiAi2QARbOS",
+      "bytes": 7784256
+    },
+    {
+      "id": "ananda",
+      "file": "Ananda_Temple.glb",
+      "driveId": "1CGuPzEh1j1G2y8rdOJGNYYm3xJnKBwie",
+      "bytes": 7304496
+    },
+    {
+      "id": "htilominlo",
+      "file": "Htilominlo_Temple.glb",
+      "driveId": "13-55kND78INyGKvdybrqmHV-3kSRdemZ",
+      "bytes": 8774980
+    },
+    {
+      "id": "thatbyinnyu",
+      "file": "Thatbyinnyu_Temple.glb",
+      "driveId": "1bgEDfLffGtW58hp_skd5q9prSLWHVzzC",
+      "bytes": 11132368
+    },
+    {
+      "id": "dhammayangyi",
+      "file": "Dhammayangyi_Temple.glb",
+      "driveId": "1G7autBQod2JgapM00t0FugQ3mZUqOnuB",
+      "bytes": 3419828
+    },
+    {
+      "id": "shwesandaw",
+      "file": "Shwesandaw_Bagan.glb",
+      "driveId": "1_BfOf9Vt5kmsvIy4Q8i8G_btfOc_OPT8",
+      "bytes": 3093840
+    },
+    {
+      "id": "bupaya",
+      "file": "Bupaya_Realistic.glb",
+      "driveId": "1CbMY2BsQmHGVFXF49zmHf60WATXZFfv9",
+      "bytes": 15604828
+    },
+    {
+      "id": "gawdawpalin",
+      "file": "Gawdawpalin_Temple.glb",
+      "driveId": "1T24oBJKJ4O_kUlF7kpZ7Z89_QH-GJMze",
+      "bytes": 8376760
+    },
+    {
+      "id": "alodawpyae",
+      "file": "Alodawpyae_Pagoda.glb",
+      "driveId": "1UoRssPa2TXBanmqusuVW9aU1zao_VdZE",
+      "bytes": 3881712
+    },
+    {
+      "id": "lawka-hteik-pan",
+      "file": "lawka_hteik_pan.glb",
+      "driveId": "1rNlI9kNuD-r4hWBEnXrIKCHw2eNE0lkZ",
+      "bytes": 1705828
+    },
+    {
+      "id": "myazedi",
+      "file": "Myazedi_Stone_Inscription.glb",
+      "driveId": "1ITsD-E0d1USfF2N_xyyrAmT1qJrU0bWb",
+      "bytes": 5415032
+    },
+    {
+      "id": "tharabar-gate",
+      "file": "Tharabar_Gate.glb",
+      "driveId": "1qypW62d-WJta7vZVE-WhEh1CruWP8ZyD",
+      "bytes": 16788964
+    },
+    {
+      "id": "bagan-entrance",
+      "file": "Bagan_Entrance_Gateway.glb",
+      "driveId": "1ewXW_x2RLeil4JQ7DmAh8ploq0RApr7V",
+      "bytes": 4985540
+    }
+  ]
+}
