@@ -19,6 +19,8 @@ import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberModelInstance
 import com.google.ar.core.Anchor
 import com.google.ar.core.Plane
+import com.google.ar.core.Frame
+import com.google.ar.core.TrackingState
 import com.google.ar.core.ArCoreApk
 
 class NativeARActivity:ComponentActivity() {
@@ -54,6 +56,7 @@ class NativeARActivity:ComponentActivity() {
   }
   val modelName=intent.getStringExtra("model_name") ?: "Bagan Temple"
   val demoMode=intent.getBooleanExtra("demo_mode",false)
+  val lightweight=intent.getBooleanExtra("lightweight_cgi",false)
   setContent {
    MaterialTheme {
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -61,7 +64,7 @@ class NativeARActivity:ComponentActivity() {
       TextButton(onClick={finish()}){Text("← ပြန်သွားရန်")}
       Text(modelName,modifier=Modifier.padding(12.dp))
      }
-     if(demoMode) Text("DEMO MODEL — not the original Bagan monument",modifier=Modifier.padding(horizontal=12.dp),color=MaterialTheme.colorScheme.error)
+     if(demoMode) Text(if(lightweight) "LIGHTWEIGHT CGI — stylized, not a real temple scan" else "DEMO MODEL — not the original Bagan monument",modifier=Modifier.padding(horizontal=12.dp),color=MaterialTheme.colorScheme.error)
      if(!arReady){
       Text(installMessage ?: "Checking Google Play Services for AR…",Modifier.padding(16.dp))
       TextButton(onClick={finish()}){Text("Return to 3D Museum")}
@@ -73,32 +76,63 @@ class NativeARActivity:ComponentActivity() {
      }else{
       var anchor by remember { mutableStateOf<Anchor?>(null) }
       var issue by remember { mutableStateOf<String?>(null) }
+      var currentFrame by remember { mutableStateOf<Frame?>(null) }
+      var planeFound by remember { mutableStateOf(false) }
       Box(Modifier.fillMaxSize()) {
        ARSceneView(
         modifier=Modifier.fillMaxSize(),
         onSessionFailed={error->issue=error.localizedMessage ?: "ARCore session failed"},
         onSessionUpdated={_,frame->
-          if(anchor==null) {
-           try {
-            anchor=frame.getUpdatedTrackables(Plane::class.java)
-              .firstOrNull {it.type==Plane.Type.HORIZONTAL_UPWARD_FACING && it.trackingState==com.google.ar.core.TrackingState.TRACKING}
-              ?.let { plane -> plane.createAnchor(plane.centerPose) }
-           }catch(e:Exception){issue=e.localizedMessage ?: "AR plane tracking failed"}
-          }
+          currentFrame=frame
+          planeFound=frame.getUpdatedTrackables(Plane::class.java).any {
+           it.type==Plane.Type.HORIZONTAL_UPWARD_FACING && it.trackingState==TrackingState.TRACKING
+          } || planeFound
         }
        ) {
         anchor?.let {a->
          AnchorNode(anchor=a) {
           rememberModelInstance(modelLoader,modelUri)?.let {instance->
-           ModelNode(modelInstance=instance,scaleToUnits=0.45f)
+           ModelNode(modelInstance=instance,scaleToUnits=0.45f,autoAnimate=false)
           }
          }
         }
        }
+       Column(Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(14.dp)) {
+        Surface(color=androidx.compose.ui.graphics.Color(0xDD091C2E),shape=MaterialTheme.shapes.medium){
+         Text(when {
+          anchor!=null -> "CGI placed • Move phone to explore the model"
+          planeFound -> "Surface detected. Tap Place Model."
+          else -> "Move phone slowly to detect a horizontal surface"
+         },modifier=Modifier.padding(12.dp),color=androidx.compose.ui.graphics.Color.White)
+        }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+         Button(onClick={
+          try {
+           val frame=currentFrame ?: throw IllegalStateException("Camera tracking not ready")
+           val x=frame.camera.imageIntrinsics.imageDimensions[0]/2f
+           val y=frame.camera.imageIntrinsics.imageDimensions[1]/2f
+           val hit=frame.hitTest(x,y).firstOrNull { result ->
+            val plane=result.trackable as? Plane
+            plane!=null && plane.type==Plane.Type.HORIZONTAL_UPWARD_FACING &&
+              plane.trackingState==TrackingState.TRACKING &&
+              plane.isPoseInPolygon(result.hitPose)
+           }
+           if(hit!=null){
+            anchor?.detach()
+            anchor=hit.createAnchor()
+           }else issue="No flat surface detected. Point at the floor or table."
+          }catch(e:Exception){issue=e.localizedMessage ?: "AR placement failed"}
+         },enabled=planeFound,modifier=Modifier.weight(1f)){
+          Text(if(anchor==null)"Place Model" else "Move Model")
+         }
+         OutlinedButton(onClick={anchor?.detach();anchor=null},
+          enabled=anchor!=null){Text("Reset")}
+        }
+       }
        if(issue!=null){
-        AlertDialog(onDismissRequest={issue=null},title={Text("AR Unavailable")},
-          text={Text(issue!!+"\nGoogle Play Services for AR ကိုစစ်ပါ။")},
-          confirmButton={TextButton(onClick={finish()}){Text("Back")}})
+        AlertDialog(onDismissRequest={issue=null},title={Text("AR Camera")},
+         text={Text((issue ?: "AR unavailable")+"\\nCheck Google Play Services for AR.")},
+         confirmButton={TextButton(onClick={issue=null}){Text("OK")}})
        }
       }
      }
