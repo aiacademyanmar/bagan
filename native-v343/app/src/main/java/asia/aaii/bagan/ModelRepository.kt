@@ -33,6 +33,29 @@ object ModelRepository {
     fun cached(context: Context, item: Temple): File =
         File(File(context.filesDir, "models"), item.id + ".glb")
 
+    /** Bundled offline stylized CGI is loaded from Android assets; never through the network. */
+    fun optimizedAsset(context: Context, item: Temple): String {
+        val path = "models/optimized/${item.id}.glb"
+        val buffer = context.assets.open(path).use { it.readBytes() }
+        if (buffer.size < 28 || buffer.size > 1_000_000)
+            throw IOException("Optimized CGI GLB file is missing or oversized")
+        val bytes = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN)
+        if (bytes.int != 0x46546c67 || bytes.int != 2 || bytes.int != buffer.size)
+            throw IOException("Optimized CGI has invalid GLB 2.0 header or length")
+        val jsonLength = bytes.int
+        val jsonType = bytes.int
+        if (jsonType != 0x4e4f534a || jsonLength <= 0 ||
+            20L + jsonLength + 8 > buffer.size.toLong())
+            throw IOException("Optimized CGI GLB JSON chunk is invalid")
+        bytes.position(20 + jsonLength)
+        val binaryLength = bytes.int
+        val binaryType = bytes.int
+        if (binaryType != 0x004e4942 || binaryLength < 0 ||
+            28L + jsonLength + binaryLength != buffer.size.toLong())
+            throw IOException("Optimized CGI GLB BIN chunk is invalid")
+        return path
+    }
+
     fun validate(file: File) {
         if (!file.isFile || file.length() < 20 || file.length() > 250_000_000L)
             throw IOException("Invalid GLB size")
