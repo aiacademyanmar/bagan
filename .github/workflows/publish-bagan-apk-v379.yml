@@ -33,7 +33,7 @@ jobs:
           gradle-version: '8.13'
       - name: Verify Android source
         run: |
-          grep -q 'versionName = "3.7.9"' native-v343/app/build.gradle.kts
+          grep -q 'versionName = "3.8.0"' native-v343/app/build.gradle.kts
           test -e native-v343/app/src/main/java/asia/aaii/bagan/NativeARActivity.kt
       - name: Compile release deliverable
         working-directory: native-v343
