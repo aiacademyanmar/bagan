@@ -69,6 +69,7 @@ fun BaganHeritageApp(
  var loadProgress by remember {mutableIntStateOf(0)}
  var modelFile by remember {mutableStateOf<String?>(null)}
  var modelDemo by remember {mutableStateOf(false)}
+ var cgiOptimized by remember {mutableStateOf(false)}
  var loadError by remember {mutableStateOf("")}
  var renderReady by remember {mutableStateOf(false)}
  var retryCount by remember {mutableIntStateOf(0)}
@@ -83,7 +84,7 @@ fun BaganHeritageApp(
   prefs.edit().putStringSet("fav",fav.toSet()).apply()
  }
  fun loadModel(t:Temple){
-  selected=t; modelFile=null; modelDemo=false; loadError="";loadProgress=0; renderReady=false
+  selected=t; modelFile=null; modelDemo=false; cgiOptimized=false; loadError="";loadProgress=0; renderReady=false
   if(onlineOnly){
    try {
     val cached=ModelRepository.cached(ctx,t)
@@ -98,10 +99,24 @@ fun BaganHeritageApp(
   }
   retryCount++;go(19)
  }
+ fun optimizedModel(){
+  val temple=selected ?: return
+  val asset="models/optimized/${temple.id}.glb"
+  try{
+   ctx.assets.open(asset).use { input->
+    if(input.read()!=103 || input.read()!=108 || input.read()!=84 || input.read()!=70)
+       throw IllegalArgumentException("Invalid optimized CGI GLB")
+   }
+   modelFile=asset;modelDemo=false;cgiOptimized=true;renderReady=false;go(5)
+  }catch(e:Exception){
+   loadError="Optimized CGI asset missing: $asset. "+(e.localizedMessage ?: "")
+   go(20)
+  }
+ }
  fun demoModel(){
   try{
    ModelRepository.demo(ctx)
-   modelDemo=true; modelFile="models/demo_pagoda.glb"; renderReady=false;go(5)
+   modelDemo=true; cgiOptimized=false; modelFile="models/demo_pagoda.glb"; renderReady=false;go(5)
   }catch(e:Exception){loadError="Demo GLB: "+(e.localizedMessage ?: "Error");go(20)}
  }
  LaunchedEffect(route,retryCount) {
@@ -160,8 +175,8 @@ fun BaganHeritageApp(
       onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
       onPage={go(it)})
-    5->ModelScreen(selected,modelFile,modelDemo,{renderReady=true},
-      {selected?.let{loadModel(it)}},{demoModel()},{go(6)},{go(4)},fastMode,
+    5->ModelScreen(selected,modelFile,modelDemo,cgiOptimized,{renderReady=true},
+      {selected?.let{loadModel(it)}},{demoModel()},{optimizedModel()},{go(6)},{go(4)},fastMode,
       onFastModeChange={fast->
        fastMode=fast
        prefs.edit().putBoolean("fast_3d_mode",fast).apply()
@@ -405,8 +420,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  }
 }
 @Composable private fun ModelScreen(
- t:Temple?, file:String?, demo:Boolean, ready:()->Unit,
- retry:()->Unit, demoClick:()->Unit, ar:()->Unit, back:()->Unit,
+ t:Temple?, file:String?, demo:Boolean, optimized:Boolean, ready:()->Unit,
+ retry:()->Unit, demoClick:()->Unit, optimizedClick:()->Unit, ar:()->Unit, back:()->Unit,
  fastMode:Boolean,
  onFastModeChange:(Boolean)->Unit
 ){
@@ -440,12 +455,13 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   // rotation instructions; it does not fabricate a separate panorama file.
   Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState())
      .padding(horizontal=8.dp,vertical=7.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
-   val currentType=if(touch360)"360° Touch" else if(demo)"CGI Demo" else "Original GLB"
-   listOf("Original GLB","CGI Demo","360° Touch","AR").forEach{type->
+   val currentType=if(touch360)"360° Touch" else if(optimized)"Optimized CGI" else if(demo)"CGI Demo" else "Original GLB"
+   listOf("Optimized CGI","Original GLB","CGI Demo","360° Touch","AR").forEach{type->
     val active=type==currentType
     Box(Modifier.background(if(active)Gold else Color(0xFF31465C),RoundedCornerShape(10.dp))
       .clickable {
        when(type){
+        "Optimized CGI"->{touch360=false;optimizedClick()}
         "Original GLB"->{touch360=false;retry()}
         "CGI Demo"->{touch360=false;demoClick()}
         "360° Touch"->touch360=true
@@ -511,6 +527,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
      }
     }
    }
+   if(optimized)Text("OPTIMIZED CGI — stylized illustration, not an archaeological reconstruction",
+     color=Gold,fontSize=10.sp,modifier=Modifier.align(Alignment.BottomCenter).background(Navy).padding(8.dp))
    if(demo)Text("OFFLINE DEMO — not the original monument model",
      color=Gold,fontSize=11.sp,modifier=Modifier.align(Alignment.BottomCenter)
        .background(Navy).padding(10.dp))
