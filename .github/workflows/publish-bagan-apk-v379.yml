@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/publish-bagan-apk-v380.yml'
+      - '.github/workflows/publish-bagan-apk-v379.yml'
 
 permissions:
   contents: write
