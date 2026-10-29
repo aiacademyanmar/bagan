@@ -76,6 +76,7 @@ fun BaganHeritageApp(
  var modelFile by remember {mutableStateOf<String?>(null)}
  var modelDemo by remember {mutableStateOf(false)}
  var cgiOptimized by remember {mutableStateOf(false)}
+ var authenticMode by remember {mutableStateOf(false)}
  var loadError by remember {mutableStateOf("")}
  var renderReady by remember {mutableStateOf(false)}
  var retryCount by remember {mutableIntStateOf(0)}
@@ -90,6 +91,7 @@ fun BaganHeritageApp(
   prefs.edit().putStringSet("fav",fav.toSet()).apply()
  }
  fun loadOriginal(t:Temple){
+  authenticMode=false
   selected=t; modelFile=null; modelDemo=false; cgiOptimized=false; loadError="";loadProgress=0; renderReady=false
   if(onlineOnly){
    try {
@@ -106,6 +108,7 @@ fun BaganHeritageApp(
   retryCount++;go(19)
  }
  fun optimizedModel(){
+  authenticMode=false
   val temple=selected ?: return
   try{
    val asset=ModelRepository.optimizedAsset(ctx,temple)
@@ -115,11 +118,26 @@ fun BaganHeritageApp(
    go(20)
   }
  }
- fun loadModel(t:Temple){ selected=t; optimizedModel() }
+ fun loadAuthentic(t:Temple){
+  selected=t; authenticMode=true; cgiOptimized=false; modelDemo=false
+  loadError="";loadProgress=0;renderReady=false
+  if(onlineOnly){
+   try{
+    val cached=ModelRepository.authenticCached(ctx,t)
+    ModelRepository.validate(cached)
+    modelFile=Uri.fromFile(cached).toString()
+    go(5)
+   }catch(e:Exception){
+    loadError="Authentic GLB is not cached yet. Disable Offline Mode, download from verified Drive or cPanel, then retry."
+    go(20)
+   }
+  }else{modelFile=null;retryCount++;go(19)}
+ }
+ fun loadModel(t:Temple){loadAuthentic(t)}
  fun demoModel(){
   try{
    ModelRepository.demo(ctx)
-   modelDemo=true; cgiOptimized=false; modelFile="models/demo_pagoda.glb"; renderReady=false;go(5)
+   authenticMode=false; modelDemo=true; cgiOptimized=false; modelFile="models/demo_pagoda.glb"; renderReady=false;go(5)
   }catch(e:Exception){loadError="Demo GLB: "+(e.localizedMessage ?: "Error");go(20)}
  }
  LaunchedEffect(route,retryCount) {
@@ -127,11 +145,13 @@ fun BaganHeritageApp(
    val t=selected!!
    try{
     val f=withContext(Dispatchers.IO){
-     ModelRepository.download(ctx,t){p->
+     (if(authenticMode) ModelRepository.downloadAuthentic(ctx,t){p->
+       (ctx as? android.app.Activity)?.runOnUiThread{loadProgress=p}
+     } else ModelRepository.download(ctx,t){p->
       (ctx as? android.app.Activity)?.runOnUiThread { loadProgress=p }
-     }
+     })
     }
-    modelFile=Uri.fromFile(f).toString();modelDemo=false;go(5)
+    modelFile=Uri.fromFile(f).toString();modelDemo=false;cgiOptimized=false;go(5)
    }catch(e:Exception){
     loadError=(e.localizedMessage ?: "Download failed")+"\nModel: "+t.fileName
     go(20)
@@ -178,8 +198,8 @@ fun BaganHeritageApp(
       onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
       onPage={go(it)})
-    5->ModelScreen(selected,modelFile,modelDemo,cgiOptimized,{renderReady=true},
-      {selected?.let{loadOriginal(it)}},{demoModel()},{optimizedModel()},{go(6)},{go(4)},fastMode,
+    5->ModelScreen(selected,modelFile,modelDemo,cgiOptimized,authenticMode,{renderReady=true},
+      {selected?.let{loadOriginal(it)}},{demoModel()},{optimizedModel()},{selected?.let{loadAuthentic(it)}},{go(6)},{go(4)},fastMode,
       onFastModeChange={fast->
        fastMode=fast
        prefs.edit().putBoolean("fast_3d_mode",fast).apply()
@@ -423,8 +443,8 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  }
 }
 @Composable private fun ModelScreen(
- t:Temple?, file:String?, demo:Boolean, optimized:Boolean, ready:()->Unit,
- retry:()->Unit, demoClick:()->Unit, optimizedClick:()->Unit, ar:()->Unit, back:()->Unit,
+ t:Temple?, file:String?, demo:Boolean, optimized:Boolean, authentic:Boolean, ready:()->Unit,
+ retry:()->Unit, demoClick:()->Unit, optimizedClick:()->Unit, authenticClick:()->Unit, ar:()->Unit, back:()->Unit,
  fastMode:Boolean,
  onFastModeChange:(Boolean)->Unit
 ){
@@ -469,13 +489,14 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   // rotation instructions; it does not fabricate a separate panorama file.
   Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState())
      .padding(horizontal=8.dp,vertical=7.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
-   val currentType=if(touch360)"360° Touch" else if(optimized)"Optimized CGI" else if(demo)"CGI Demo" else "Original GLB"
-   listOf("Optimized CGI","Original GLB","CGI Demo","360° Touch","AR").forEach{type->
+   val currentType=if(touch360)"360° Touch" else if(authentic)"Authentic GLB" else if(optimized)"Stylized CGI" else if(demo)"CGI Demo" else "Original GLB"
+   listOf("Authentic GLB","Stylized CGI","Original GLB","CGI Demo","360° Touch","AR").forEach{type->
     val active=type==currentType
     Box(Modifier.background(if(active)Gold else Color(0xFF31465C),RoundedCornerShape(10.dp))
       .clickable {
        when(type){
-        "Optimized CGI"->{touch360=false;optimizedClick()}
+        "Authentic GLB"->{touch360=false;authenticClick()}
+        "Stylized CGI"->{touch360=false;optimizedClick()}
         "Original GLB"->{touch360=false;retry()}
         "CGI Demo"->{touch360=false;demoClick()}
         "360° Touch"->touch360=true
@@ -501,9 +522,9 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
       verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
    Text("●",color=if(optimized)Color(0xFF8BE1A6) else Gold,fontSize=14.sp)
    Column(Modifier.weight(1f)){
-    Text(when { optimized->"OPTIMIZED CGI • OFFLINE";demo->"CGI DEMO • OFFLINE";file?.startsWith("file:")==true->"ORIGINAL GLB • CACHED";else->"MODEL SOURCE • CHECKING" },
+    Text(when { authentic->"AUTHENTIC GLB • DRIVE / CPANEL";optimized->"STYLIZED CGI • OFFLINE";demo->"CGI DEMO • OFFLINE";file?.startsWith("file:")==true->"ORIGINAL GLB • CACHED";else->"MODEL SOURCE • CHECKING" },
       color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold)
-    Text(when {optimized->"Bundled stylized low-poly model, not a heritage scan";demo->"Bundled generic sample";else->"Original model (if server file is available)"},
+    Text(when {authentic->"Original-based GLB, cached after download";optimized->"Bundled stylized low-poly model, not a heritage scan";demo->"Bundled generic sample";else->"Original model (if server file is available)"},
        color=SoftGold,fontSize=10.sp,maxLines=1)
    }
    Text(if(rendered)"READY" else if(timedOut)"RETRY" else "LOADING",color=if(rendered)Color(0xFF8BE1A6) else Gold,fontSize=10.sp)
