@@ -161,7 +161,11 @@ fun BaganHeritageApp(
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
       onPage={go(it)})
     5->ModelScreen(selected,modelFile,modelDemo,{renderReady=true},
-      {selected?.let{loadModel(it)}},{demoModel()},{go(6)},{go(4)},fastMode)
+      {selected?.let{loadModel(it)}},{demoModel()},{go(6)},{go(4)},fastMode,
+      onFastModeChange={fast->
+       fastMode=fast
+       prefs.edit().putBoolean("fast_3d_mode",fast).apply()
+      })
     6->ArInstructions(selected,onStart={selected?.let{onAR(it)}},onBack={go(4)},onModel={selected?.let{loadModel(it)} ?: go(3)})
     7->MapPage(temples,onDirections={onMap(it)},onDetail={openTemple(it)})
     8->GalleryPage(selected,imageTab,{imageTab=it},onDetail={go(4)})
@@ -403,8 +407,10 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
 @Composable private fun ModelScreen(
  t:Temple?, file:String?, demo:Boolean, ready:()->Unit,
  retry:()->Unit, demoClick:()->Unit, ar:()->Unit, back:()->Unit,
- fastMode:Boolean
+ fastMode:Boolean,
+ onFastModeChange:(Boolean)->Unit
 ){
+ var touch360 by remember(t?.id){mutableStateOf(false)}
  var rendered by remember(file){mutableStateOf(false)}
  var timedOut by remember(file){mutableStateOf(false)}
  var fallbackStarted by remember(file){mutableStateOf(false)}
@@ -422,10 +428,48 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   }
  }
  Column(Modifier.fillMaxSize().background(Navy)){
-  Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){
+  Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=7.dp),verticalAlignment=Alignment.CenterVertically){
    TextButton(onClick=back){Text("‹ Back",color=Gold)}
-   Text((t?.nameEn ?: "Demo")+" • 3D View",color=Color.White,fontWeight=FontWeight.Bold)
+   Column {
+    Text((t?.nameEn ?: "Demo")+" • 3D View",color=Color.White,fontWeight=FontWeight.Bold)
+    Text("CGI TYPE • Select viewing mode",color=SoftGold,fontSize=11.sp)
+   }
   }
+  // CGI TYPE selector sits immediately ABOVE the native Filament 3D canvas.
+  // Original and Demo select a different GLB source. 360 mode enables touch
+  // rotation instructions; it does not fabricate a separate panorama file.
+  Row(Modifier.fillMaxWidth().background(Navy2).horizontalScroll(rememberScrollState())
+     .padding(horizontal=8.dp,vertical=7.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+   val currentType=if(touch360)"360° Touch" else if(demo)"CGI Demo" else "Original GLB"
+   listOf("Original GLB","CGI Demo","360° Touch","AR").forEach{type->
+    val active=type==currentType
+    Box(Modifier.background(if(active)Gold else Color(0xFF31465C),RoundedCornerShape(10.dp))
+      .clickable {
+       when(type){
+        "Original GLB"->{touch360=false;retry()}
+        "CGI Demo"->{touch360=false;demoClick()}
+        "360° Touch"->touch360=true
+        "AR"->ar()
+       }
+      }.padding(horizontal=13.dp,vertical=10.dp)){
+      Text(type,color=if(active)Navy else Color.White,fontSize=12.sp,fontWeight=FontWeight.Bold)
+    }
+   }
+  }
+  Row(Modifier.fillMaxWidth().background(Navy2).padding(horizontal=12.dp,vertical=4.dp),
+    verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(7.dp)){
+   Text("Render:",color=SoftGold,fontSize=11.sp)
+   listOf("Fast" to true,"High Detail" to false).forEach{(label,fast)->
+    Box(Modifier.background(if(fastMode==fast)Gold else Color(0xFF31465C),RoundedCornerShape(8.dp))
+      .clickable{onFastModeChange(fast)}
+      .padding(horizontal=12.dp,vertical=7.dp)){
+      Text(label,color=if(fastMode==fast)Navy else Color.White,fontSize=11.sp)
+    }
+   }
+  }
+  if(touch360) Text("360° Touch Mode: Drag the model to rotate • Pinch to zoom",
+     color=SoftGold,fontSize=11.sp,modifier=Modifier.fillMaxWidth().background(Navy).padding(8.dp),
+     textAlign=TextAlign.Center)
   Box(Modifier.weight(1f).fillMaxWidth()){
    if(file!=null){
     key(file) {
@@ -477,7 +521,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    GButton("↻ Retry",retry,Modifier.weight(1f))
    GButton("AR Camera",ar,Modifier.weight(1f))
   }
-  Text((if(fastMode)"FAST MODE  •  " else "QUALITY MODE  •  ") + "Drag to rotate  •  Pinch to zoom",color=Color.White,fontSize=12.sp,
+  Text((if(fastMode)"FAST RENDER  •  " else "HIGH DETAIL RENDER  •  ") + "Drag to rotate  •  Pinch to zoom",color=Color.White,fontSize=12.sp,
    modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=12.dp))
  }
 }
