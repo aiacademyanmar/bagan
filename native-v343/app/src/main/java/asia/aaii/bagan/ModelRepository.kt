@@ -1,9 +1,12 @@
 package asia.aaii.bagan
 
 import android.content.Context
+import android.net.Uri
 import org.json.JSONArray
 import java.io.File
 import java.io.IOException
+import java.io.BufferedInputStream
+import java.util.zip.ZipInputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.ByteBuffer
@@ -109,6 +112,58 @@ object ModelRepository {
     )
     fun authenticCached(context: Context, item: Temple): File =
         File(File(context.filesDir, "authentic"), item.id + ".glb")
+
+    /**
+     * Import a user-selected ZIP of original-derived Bagan GLBs into private offline storage.
+     * SAF picker avoids storage permission. Only exact catalog filenames are accepted;
+     * all archives entries are streamed (not extracted by path), preventing zip-slip.
+     * Each model is validated as GLB 2.0 before replacing its cached copy.
+     * Accepts the V3.7.7 archive at models/optimized_authentic/*.glb.
+     */
+    fun importAuthenticZip(context: Context, uri: Uri, progress:(Int,Int)->Unit):Int {
+        val catalog=catalog(context)
+        val known=catalog.associateBy{it.fileName}
+        val dir=File(context.filesDir,"authentic")
+        if(!dir.exists() && !dir.mkdirs())throw IOException("Cannot create 3D cache directory")
+        val input=context.contentResolver.openInputStream(uri)
+            ?: throw IOException("Unable to read selected ZIP")
+        var imported=0
+        var totalUnpacked=0L
+        val seen=HashSet<String>()
+        ZipInputStream(BufferedInputStream(input)).use{zip->
+            while(true){
+                val entry=zip.nextEntry ?: break
+                if(entry.isDirectory){zip.closeEntry();continue}
+                val fileName=entry.name.replace('\\','/').substringAfterLast('/')
+                val item=known[fileName]
+                if(item==null || !seen.add(fileName)){zip.closeEntry();continue}
+                val dst=authenticCached(context,item)
+                val tmp=File(dir,item.id+".part")
+                try{
+                    var size=0L
+                    tmp.outputStream().use{out->
+                        val buf=ByteArray(64*1024)
+                        while(true){
+                            val read=zip.read(buf)
+                            if(read<0)break
+                            size+=read
+                            totalUnpacked+=read
+                            if(size>250_000_000L || totalUnpacked>350_000_000L)
+                                throw IOException("ZIP GLB exceeds safety limit")
+                            out.write(buf,0,read)
+                        }
+                    }
+                    validate(tmp)
+                    if(!tmp.renameTo(dst))tmp.copyTo(dst,overwrite=true)
+                    validate(dst)
+                    imported++
+                    progress(imported,catalog.size)
+                }finally{tmp.delete();zip.closeEntry()}
+            }
+        }
+        if(imported==0)throw IOException("ZIP does not contain any recognized Bagan GLB files")
+        return imported
+    }
 
     fun downloadAuthentic(context: Context, item: Temple, progress:(Int)->Unit):File {
         val saved=authenticCached(context,item)
