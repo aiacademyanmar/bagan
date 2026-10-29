@@ -118,7 +118,7 @@ object ModelRepository {
      * SAF picker avoids storage permission. Only exact catalog filenames are accepted;
      * all archives entries are streamed (not extracted by path), preventing zip-slip.
      * Each model is validated as GLB 2.0 before replacing its cached copy.
-     * Accepts the V3.7.7 archive at models/optimized_authentic/*.glb.
+     * Accepts the V3.7.7 archive at models/optimized_authentic/ (GLB files).
      */
     fun importAuthenticZip(context: Context, uri: Uri, progress:(Int,Int)->Unit):Int {
         val catalog=catalog(context)
