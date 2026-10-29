@@ -83,7 +83,7 @@ fun BaganHeritageApp(
   fav=if(t.id in fav)fav-t.id else fav+t.id
   prefs.edit().putStringSet("fav",fav.toSet()).apply()
  }
- fun loadModel(t:Temple){
+ fun loadOriginal(t:Temple){
   selected=t; modelFile=null; modelDemo=false; cgiOptimized=false; loadError="";loadProgress=0; renderReady=false
   if(onlineOnly){
    try {
@@ -101,18 +101,15 @@ fun BaganHeritageApp(
  }
  fun optimizedModel(){
   val temple=selected ?: return
-  val asset="models/optimized/${temple.id}.glb"
   try{
-   ctx.assets.open(asset).use { input->
-    if(input.read()!=103 || input.read()!=108 || input.read()!=84 || input.read()!=70)
-       throw IllegalArgumentException("Invalid optimized CGI GLB")
-   }
+   val asset=ModelRepository.optimizedAsset(ctx,temple)
    modelFile=asset;modelDemo=false;cgiOptimized=true;renderReady=false;go(5)
   }catch(e:Exception){
-   loadError="Optimized CGI asset missing: $asset. "+(e.localizedMessage ?: "")
+   loadError="Optimized CGI asset invalid for ${temple.nameEn}: "+(e.localizedMessage ?: "")
    go(20)
   }
  }
+ fun loadModel(t:Temple){ selected=t; optimizedModel() }
  fun demoModel(){
   try{
    ModelRepository.demo(ctx)
@@ -176,7 +173,7 @@ fun BaganHeritageApp(
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
       onPage={go(it)})
     5->ModelScreen(selected,modelFile,modelDemo,cgiOptimized,{renderReady=true},
-      {selected?.let{loadModel(it)}},{demoModel()},{optimizedModel()},{go(6)},{go(4)},fastMode,
+      {selected?.let{loadOriginal(it)}},{demoModel()},{optimizedModel()},{go(6)},{go(4)},fastMode,
       onFastModeChange={fast->
        fastMode=fast
        prefs.edit().putBoolean("fast_3d_mode",fast).apply()
@@ -195,7 +192,7 @@ fun BaganHeritageApp(
     17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
     18->AboutV357(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
-    20->ErrorPage(loadError,onRetry={selected?.let{loadModel(it)}},onDemo={demoModel()},onBack={go(3)})
+    20->ErrorPage(loadError,onRetry={selected?.let{loadOriginal(it)}},onDemo={demoModel()},onBack={go(3)})
     21->BaganDiagnosticsScreen(temples,onBack={go(16)})
     22->V354Categories(temples,onCategory={category=it;go(3)},onTemple={openTemple(it)})
     23->MuseumInfoV356(onHistory={go(9)},onArtifacts={go(24)})
@@ -437,7 +434,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   }
  }
  LaunchedEffect(timedOut, demo, file){
-  if(timedOut && !demo && !fallbackStarted){
+  if(timedOut && !demo && !optimized && !fallbackStarted){
    fallbackStarted=true
    demoClick()
   }
@@ -536,7 +533,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   Row(Modifier.fillMaxWidth().padding(10.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
    // The previous outlined Back button used dark text on a dark background.
    GButton("‹ Back",back,Modifier.weight(1f))
-   GButton("↻ Retry",retry,Modifier.weight(1f))
+   GButton(if(optimized)"Original GLB" else "↻ Retry",retry,Modifier.weight(1f))
    GButton("AR Camera",ar,Modifier.weight(1f))
   }
   Text((if(fastMode)"FAST RENDER  •  " else "HIGH DETAIL RENDER  •  ") + "Drag to rotate  •  Pinch to zoom",color=Color.White,fontSize=12.sp,
