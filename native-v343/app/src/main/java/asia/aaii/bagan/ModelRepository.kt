@@ -59,6 +59,31 @@ object ModelRepository {
         return path
     }
 
+    /** Prepared lightweight CGI for native AR. Every Bagan site has a bundled GLB.
+     * ARCore / Filament accept a local file URI; copying once avoids asset URI ambiguity.
+     * These are stylized approximations, not scanned archaeological geometry.
+     */
+    fun lightweightAr(context: Context, temple: Temple): File {
+        val asset = optimizedAsset(context, temple)
+        val directory = File(context.filesDir, "ar_lightweight")
+        if(!directory.exists() && !directory.mkdirs())throw IOException("Cannot initialize AR model cache")
+        val cached = File(directory, temple.id + ".glb")
+        if(cached.exists()){
+            try {validate(cached);return cached}
+            catch(_:IOException){cached.delete()}
+        }
+        val part = File(directory, temple.id + ".part")
+        try {
+            context.assets.open(asset).use { input ->
+                part.outputStream().use { output -> input.copyTo(output) }
+            }
+            validate(part)
+            if(!part.renameTo(cached))part.copyTo(cached, overwrite=true)
+            validate(cached)
+            return cached
+        } finally { part.delete() }
+    }
+
     fun validate(file: File) {
         if (!file.isFile || file.length() < 20 || file.length() > 250_000_000L)
             throw IOException("Invalid GLB size")
