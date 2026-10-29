@@ -10,8 +10,8 @@ android {
     applicationId = "asia.aaii.bagan.museum"
     minSdk = 26
     targetSdk = 35
-    versionCode = 374
-    versionName = "3.7.4"
+    versionCode = 375
+    versionName = "3.7.5"
   }
   buildTypes { getByName("release") { isMinifyEnabled = false } }
   compileOptions {
