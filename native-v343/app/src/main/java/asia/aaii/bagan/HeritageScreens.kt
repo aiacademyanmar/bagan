@@ -480,6 +480,17 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
     }
    }
   }
+  Row(Modifier.fillMaxWidth().background(Color(0xFF173244)).padding(horizontal=12.dp,vertical=8.dp),
+      verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
+   Text("●",color=if(optimized)Color(0xFF8BE1A6) else Gold,fontSize=14.sp)
+   Column(Modifier.weight(1f)){
+    Text(when { optimized->"OPTIMIZED CGI • OFFLINE";demo->"CGI DEMO • OFFLINE";file?.startsWith("file:")==true->"ORIGINAL GLB • CACHED";else->"MODEL SOURCE • CHECKING" },
+      color=Color.White,fontSize=11.sp,fontWeight=FontWeight.Bold)
+    Text(when {optimized->"Bundled stylized low-poly model, not a heritage scan";demo->"Bundled generic sample";else->"Original model (if server file is available)"},
+       color=SoftGold,fontSize=10.sp,maxLines=1)
+   }
+   Text(if(rendered)"READY" else if(timedOut)"RETRY" else "LOADING",color=if(rendered)Color(0xFF8BE1A6) else Gold,fontSize=10.sp)
+  }
   if(touch360) Text("360° Touch Mode: Drag the model to rotate • Pinch to zoom",
      color=SoftGold,fontSize=11.sp,modifier=Modifier.fillMaxWidth().background(Navy).padding(8.dp),
      textAlign=TextAlign.Center)
