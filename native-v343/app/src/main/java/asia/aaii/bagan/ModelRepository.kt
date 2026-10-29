@@ -184,7 +184,7 @@ object ModelRepository {
                 connection.connectTimeout=10000
                 connection.readTimeout=30000
                 connection.instanceFollowRedirects=true
-                connection.setRequestProperty("Accept","model/gltf-binary,application/octet-stream,*/*")
+                connection.setRequestProperty("Accept", "application/octet-stream")
                 val status=connection.responseCode
                 if(status!=200)throw IOException("HTTP $status at $url")
                 val total=connection.contentLengthLong
