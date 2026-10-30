@@ -78,6 +78,8 @@ fun BaganHeritageApp(
  var showLang by remember {mutableStateOf(false)}
  var language by remember {mutableStateOf(prefs.getString("language", "မြန်မာ") ?: "မြန်မာ")}
  var fastMode by remember {mutableStateOf(prefs.getBoolean("fast_3d_mode",true))}
+ var wifiOnly by remember {mutableStateOf(prefs.getBoolean("wifi_only",false))}
+ var showDownloadProgress by remember {mutableStateOf(prefs.getBoolean("download_progress",true))}
  var onlineOnly by remember {mutableStateOf(prefs.getBoolean("offline_mode",false))}
  var loadProgress by remember {mutableIntStateOf(0)}
  var modelFile by remember {mutableStateOf<String?>(null)}
@@ -222,11 +224,8 @@ fun BaganHeritageApp(
    when(route){
     1->Splash(onStart={go(2)})
     2->BaganHomeV383(temples,onSearch={go(13)},navigate={go(it)},onDetails={openTemple(it)},on3D={loadModel(it)},onAR={selected=it;go(6)},onFavorite={favorite(it)},favorites=fav)
-    3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},{loadModel(it)},{selected=it;go(6)},{onMap(it)},fav)
-    4->TempleDetail(selected ?: temples.first(),infoTab,{infoTab=it},
-      onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
-      onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
-      onPage={go(it)})
+    3->BaganPagodasV385(temples,query,{query=it},category,{category=it},{openTemple(it)},{loadModel(it)},{selected=it;go(6)},{onMap(it)})
+    4->BaganTempleV385(selected ?: temples.first(),infoTab,{infoTab=it},onBack={go(3)},on3D={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},onSaved={selected?.let{favorite(it)}},saved=selected?.id in fav,onHistory={go(9)},onGallery={go(8)},onAudio={go(10)})
     5->ModelScreen(selected,modelFile,modelDemo,cgiOptimized,authenticMode,{renderReady=true},
       {selected?.let{loadOriginal(it)}},{demoModel()},{optimizedModel()},{selected?.let{loadAuthentic(it)}},{go(6)},{go(4)},fastMode,
       onFastModeChange={fast->
@@ -245,9 +244,9 @@ fun BaganHeritageApp(
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)},
       onImport={zipPicker.launch(arrayOf("application/zip","application/octet-stream"))},
       importing=importBusy,refresh=offlineRevision)
-    16->SettingsV383(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)},onStorage={go(28)},onDownload={go(15)},fastMode=fastMode,onFastMode={fastMode=it;prefs.edit().putBoolean("fast_3d_mode",it).apply()})
-    17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
-    18->AboutV357(onHome={go(2)})
+    16->BaganSettingsV385(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},fast=fastMode,onFast={fastMode=it;prefs.edit().putBoolean("fast_3d_mode",it).apply()},onStorage={go(28)},onImport={go(15)},onARCheck={go(21)},onHelp={go(17)},onAbout={go(18)},wifiOnly=wifiOnly,onWifi={wifiOnly=it;prefs.edit().putBoolean("wifi_only",it).apply()},showProgress=showDownloadProgress,onProgress={showDownloadProgress=it;prefs.edit().putBoolean("download_progress",it).apply()})
+    17->BaganHelpV385(on3D={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)},onDownloads={go(15)},onDiagnostics={go(21)})
+    18->BaganAboutV385(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
     20->BaganRecoveryV381(error=loadError, onRetry={selected?.let{loadOriginal(it)}},onLightweight={optimizedModel()},onDiagnostics={go(21)},onHelp={go(17)},onBack={go(3)})
     21->BaganDiagnosticsScreen(temples,onBack={go(16)})
@@ -260,7 +259,7 @@ fun BaganHeritageApp(
     28->BaganCacheScreenV383(onBack={go(16)})
    }
   }
-  if(route!=1 && route!=5 && route!=6 && route!=19 && route!=20 && route!=27 && route!=28) BaganBottomBarV383(route,navigate={go(it)})
+  if(route!=1 && route!=5 && route!=6 && route!=19 && route!=20 && route!=27 && route!=28) BaganNavTopV385(route,onGo={p->if(p==5) selected?.let{optimizedModel()} ?: go(3) else go(p)})
  }
  if(showLang) AlertDialog(onDismissRequest={showLang=false},title={Text("Language / ဘာသာစကား")},
   text={Column {
