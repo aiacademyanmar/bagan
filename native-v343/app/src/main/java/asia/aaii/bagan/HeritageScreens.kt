@@ -42,10 +42,10 @@ import kotlinx.coroutines.launch
 private val Navy=Color(0xFF081B2A)
 private val Navy2=Color(0xFF10283B)
 private val Gold=Color(0xFFE1AA42)
-private val Pale=Color(0xFFFFF7EA)
-private val Ink=Color(0xFF252C36)
-private val Muted=Color(0xFF716B63)
-private val CardBorder=Color(0xFFE6D9C2)
+private val Pale=Color(0xFF081B2A)
+private val Ink=Color(0xFFF7F6F2)
+private val Muted=Color(0xFFBFCBDC)
+private val CardBorder=Color(0xFF2C4D65)
 private val SoftGold=Color(0xFFFFDF96)
 
 private val labels=listOf(
@@ -220,7 +220,7 @@ fun BaganHeritageApp(
    when(route){
     1->Splash(onStart={go(2)})
     2->V361Home(temples,onSearch={go(13)},onNavigate={p-> if(p==5) selected?.let{loadModel(it)} ?: go(3) else go(p)},onTemple={openTemple(it)})
-    3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},{loadModel(it)},{onMap(it)},fav)
+    3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},{loadModel(it)},{selected=it;go(6)},{onMap(it)},fav)
     4->TempleDetail(selected ?: temples.first(),infoTab,{infoTab=it},
       onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
       onFav={selected?.let{favorite(it)}},saved=selected?.id in fav,
@@ -247,7 +247,7 @@ fun BaganHeritageApp(
     17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
     18->AboutV357(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
-    20->ErrorPage(loadError,onRetry={selected?.let{loadOriginal(it)}},onDemo={demoModel()},onBack={go(3)})
+    20->BaganRecoveryV381(error=loadError, onRetry={selected?.let{loadOriginal(it)}},onLightweight={optimizedModel()},onDiagnostics={go(21)},onHelp={go(17)},onBack={go(3)})
     21->BaganDiagnosticsScreen(temples,onBack={go(16)})
     22->V354Categories(temples,onCategory={category=it;go(3)},onTemple={openTemple(it)})
     23->MuseumInfoV356(onHistory={go(9)},onArtifacts={go(24)})
@@ -268,7 +268,7 @@ fun BaganHeritageApp(
 @Composable
 private fun Head(t:String,number:Int,sub:String?=null){
  Column(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=12.dp)){
-  Text(t,color=Navy,fontWeight=FontWeight.Bold,fontSize=21.sp)
+  Text(t,color=SoftGold,fontWeight=FontWeight.Bold,fontSize=21.sp)
   if(sub!=null) Text(sub,color=Muted,fontSize=12.sp)
  }
 }
@@ -279,8 +279,8 @@ private fun Head(t:String,number:Int,sub:String?=null){
  }
 }
 @Composable private fun Outline(text:String,action:()->Unit,modifier:Modifier=Modifier){
- OutlinedButton(onClick=action,modifier=modifier.heightIn(min=48.dp),shape=RoundedCornerShape(11.dp),contentPadding=PaddingValues(horizontal=11.dp,vertical=8.dp)){
-  Text(text,color=Navy,fontSize=12.sp)
+ OutlinedButton(onClick=action,modifier=modifier.heightIn(min=48.dp),shape=RoundedCornerShape(11.dp),border=BorderStroke(1.dp,Gold.copy(alpha=.7f)),contentPadding=PaddingValues(horizontal=11.dp,vertical=8.dp)){
+  Text(text,color=SoftGold,fontSize=12.sp)
  }
 }
 @Composable
@@ -315,18 +315,18 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal=12.dp,vertical=6.dp),
   horizontalArrangement=Arrangement.spacedBy(7.dp)){
   names.forEach{n->
-   Box(Modifier.background(if(n==chosen)Gold else Color(0xFFF0E9DD),RoundedCornerShape(22.dp))
+   Box(Modifier.background(if(n==chosen)Gold else Navy2,RoundedCornerShape(22.dp))
      .clickable{set(n)}.heightIn(min=48.dp).padding(horizontal=15.dp,vertical=9.dp)){
-    Text(n,fontSize=11.sp,color=Ink,fontWeight=if(n==chosen)FontWeight.Bold else FontWeight.Normal)
+    Text(n,fontSize=11.sp,color=if(n==chosen)Navy else Color.White,fontWeight=if(n==chosen)FontWeight.Bold else FontWeight.Normal)
    }
   }
  }
 }
 @Composable private fun Panel(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit){
- Column(modifier.background(Color.White,RoundedCornerShape(14.dp))
+ Column(modifier.background(Navy2,RoundedCornerShape(14.dp))
   .border(1.dp,CardBorder,RoundedCornerShape(14.dp)).padding(12.dp),content=content)
 }
-@Composable private fun TempleItem(t:Temple,index:Int,saved:Boolean,open:()->Unit,fav:()->Unit,model:()->Unit,map:()->Unit){
+@Composable private fun TempleItem(t:Temple,index:Int,saved:Boolean,open:()->Unit,fav:()->Unit,model:()->Unit,ar:()->Unit,map:()->Unit){
  Panel(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=3.dp)){
   Row(verticalAlignment=Alignment.CenterVertically){
    Art(Modifier.size(90.dp,82.dp).clip(RoundedCornerShape(9.dp)),index)
@@ -342,9 +342,10 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
    Text(if(saved)"♥" else "♡",color=Color(0xFFC45A28),fontSize=24.sp,
     modifier=Modifier.clickable{fav()}.padding(4.dp))
   }
-  Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+  Row(horizontalArrangement=Arrangement.spacedBy(5.dp)){
    Outline("Details",open,Modifier.weight(1f))
-   GButton("View 3D",model,Modifier.weight(1f))
+   GButton("3D",model,Modifier.weight(1f))
+   Outline("AR",ar,Modifier.weight(1f))
    Outline("Map",map,Modifier.weight(1f))
   }
  }
@@ -415,7 +416,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
  }
 }
 @Composable private fun PagodaList(ts:List<Temple>,search:String,setSearch:(String)->Unit,cat:String,setCat:(String)->Unit,
- open:(Temple)->Unit,favorite:(Temple)->Unit,model:(Temple)->Unit,map:(Temple)->Unit,favs:Set<String>){
+ open:(Temple)->Unit,favorite:(Temple)->Unit,model:(Temple)->Unit,ar:(Temple)->Unit,map:(Temple)->Unit,favs:Set<String>){
  Column {
   Head("Pagodas & Temples",3,"ဘုရားပုထိုးများ • ${ts.size} 3D catalog entries")
   OutlinedTextField(search,setSearch,modifier=Modifier.fillMaxWidth().padding(horizontal=13.dp),
@@ -423,7 +424,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   PillGroup(listOf("All","Famous","Temples","Stupas"),cat,setCat)
   val shown=BaganCategoryFilter.matching(ts,cat,search)
   LazyColumn(contentPadding=PaddingValues(bottom=15.dp)){
-   items(shown){t->TempleItem(t,ts.indexOf(t),t.id in favs,{open(t)},{favorite(t)},{model(t)},{map(t)})}
+   items(shown){t->TempleItem(t,ts.indexOf(t),t.id in favs,{open(t)},{favorite(t)},{model(t)},{ar(t)},{map(t)})}
   }
  }
 }
@@ -923,7 +924,7 @@ private fun Art(modifier:Modifier=Modifier,seed:Int=0){
   item{Column(Modifier.fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally){
    Text("BAGAN",color=Navy,fontWeight=FontWeight.Black,fontSize=34.sp)
    Text("HERITAGE MUSEUM",color=Gold,fontSize=20.sp,fontWeight=FontWeight.Bold)
-   Text("Native Android • V3.5.3",color=Muted)
+   Text("Native Android • V3.8.1",color=Muted)
   }}
   item{Panel(Modifier.fillMaxWidth()){
    Text("Explore Bagan's ancient architectural heritage with native 3D models, AR, guides, favorites and offline caches.",color=Ink)
