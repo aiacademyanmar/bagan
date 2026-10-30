@@ -24,22 +24,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val warmCream = Color(0xFFFFF7E8)
-private val darkBrown = Color(0xFF49250F)
-private val oldGold = Color(0xFFA76624)
-private val goldenCard = Color(0xFFF5CE90)
+private val warmCream = Color(0xFF081B2A)
+private val darkBrown = Color(0xFFFFF7E8)
+private val oldGold = Color(0xFFFFD476)
+private val goldenCard = Color(0xFF15364A)
 
 @Composable
 fun V361BottomBar(activeRoute: Int, onNavigate: (Int) -> Unit) {
     val tabs = listOf(
         Triple(2, "⌂", "Home"),
-        Triple(13, "⌕", "Explore"),
+        Triple(3, "♜", "Pagodas"),
+        Triple(6, "◉", "Scan / AR"),
         Triple(7, "▧", "Map"),
-        Triple(12, "♡", "Saved"),
-        Triple(16, "☰", "More")
+        Triple(12, "♡", "Saved")
     )
     Surface(
-        color = Color.White,
+        color = Color(0xFF081B2A),
         shadowElevation = 8.dp,
         tonalElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
@@ -52,10 +52,10 @@ fun V361BottomBar(activeRoute: Int, onNavigate: (Int) -> Unit) {
             tabs.forEach { (route, symbol, label) ->
                 val selected = when (route) {
                     2 -> activeRoute == 2
-                    13 -> activeRoute in listOf(3, 4, 13, 22)
+                    3 -> activeRoute in listOf(3, 4, 13, 22)
+                    6 -> activeRoute in listOf(5,6)
                     7 -> activeRoute == 7 || activeRoute == 14
-                    12 -> activeRoute == 12
-                    else -> activeRoute in listOf(16, 17, 18, 21, 23, 24, 26, 27)
+                    else -> activeRoute == 12
                 }
                 Column(
                     modifier = Modifier.weight(1f).heightIn(min = 58.dp)
@@ -71,7 +71,7 @@ fun V361BottomBar(activeRoute: Int, onNavigate: (Int) -> Unit) {
                     )
                     Text(
                         text = label, fontSize = 11.sp,
-                        color = if (selected) oldGold else Color.DarkGray,
+                        color = if (selected) oldGold else Color(0xFFBDCAD7),
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
@@ -135,7 +135,7 @@ fun V361Home(
                 color = warmCream,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp),
                 shape = RoundedCornerShape(15.dp),
-                border = BorderStroke(1.dp, Color(0xFFEADDC9))
+                border = BorderStroke(1.dp, Color(0xFF31536A))
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
@@ -144,7 +144,7 @@ fun V361Home(
                 ) {
                     Text("⌕", color = darkBrown, fontSize = 23.sp)
                     Spacer(Modifier.width(10.dp))
-                    Text("Search temples, history...", color = Color.Gray, fontSize = 14.sp)
+                    Text("Search temples, history...", color = Color(0xFFBBC9D9), fontSize = 14.sp)
                 }
             }
         }
@@ -165,7 +165,7 @@ fun V361Home(
                                 .background(goldenCard),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(icon, color = darkBrown, fontSize = 32.sp)
+                            Text(icon, color = oldGold, fontSize = 32.sp)
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
@@ -197,7 +197,7 @@ fun V361Home(
                         onClick = { onTemple(temple) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(13.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF142D40))
                     ) {
                         Column {
                             Image(painter=painterResource(id=when((index + temple.id.length)%6){0->R.drawable.bagan_safe_1;1->R.drawable.bagan_safe_2;2->R.drawable.bagan_safe_3;3->R.drawable.bagan_safe_4;4->R.drawable.bagan_safe_5;else->R.drawable.bagan_safe_6}),contentDescription="Bagan temple illustration",modifier=Modifier.fillMaxWidth().height(124.dp),contentScale=ContentScale.Crop)
@@ -207,7 +207,7 @@ fun V361Home(
                                     maxLines = 2, fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    temple.nameEn, color = Color.DarkGray,
+                                    temple.nameEn, color = Color(0xFFC3D0DD),
                                     fontSize = 11.sp, maxLines = 2
                                 )
                             }
