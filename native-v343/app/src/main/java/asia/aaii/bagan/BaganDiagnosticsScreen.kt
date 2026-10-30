@@ -51,19 +51,19 @@ fun BaganDiagnosticsScreen(temples: List<Temple>, onBack: () -> Unit) {
             running=false
         }
     }
-    Column(Modifier.fillMaxSize().background(Color(0xFFFFF7EA))) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF081B2A))) {
         Row(Modifier.fillMaxWidth().background(Color(0xFF0B2031)).padding(12.dp),
             verticalAlignment=Alignment.CenterVertically) {
             TextButton(onClick=onBack) { Text("‹ Back", color=Color(0xFFE5B656)) }
             Column(Modifier.weight(1f)) {
                 Text("3D / AR Diagnostics",color=Color.White,fontWeight=FontWeight.Bold)
-                Text("V3.5.2 • phone & cPanel checks",color=Color.LightGray)
+                Text("V3.8.4 • phone & cPanel checks",color=Color.LightGray)
             }
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text("Check why 3D or AR is not working",color=Color(0xFF102B3D),fontWeight=FontWeight.Bold)
-            Text("This report helps identify missing GLB files, invalid cache, ARCore support and camera permission. It does not prove on-device AR tracking.",color=Color.DarkGray)
+            Text("Check why 3D or AR is not working",color=Color(0xFFFFD476),fontWeight=FontWeight.Bold)
+            Text("This report helps identify missing GLB files, invalid cache, ARCore support and camera permission. It does not prove on-device AR tracking.",color=Color(0xFFCDDAE5))
             Button(onClick={serial++},enabled=!running,modifier=Modifier.fillMaxWidth(),
                 colors=ButtonDefaults.buttonColors(containerColor=Color(0xFFD5A143))) {
                 Text(if(running)"Checking device & cPanel…" else "Run Diagnostics",color=Color(0xFF102B3D))
@@ -74,9 +74,9 @@ fun BaganDiagnosticsScreen(temples: List<Temple>, onBack: () -> Unit) {
                 clip.setPrimaryClip(ClipData.newPlainText("Bagan Diagnostics",report))
                 Toast.makeText(context,"Report copied",Toast.LENGTH_SHORT).show()
             },modifier=Modifier.fillMaxWidth(),enabled=!running){Text("Copy Diagnostic Report")}
-            Surface(color=Color.White,shape=RoundedCornerShape(12.dp),shadowElevation=2.dp){
+            Surface(color=Color(0xFF142D40),shape=RoundedCornerShape(12.dp),shadowElevation=2.dp){
                 Text(report,modifier=Modifier.fillMaxWidth().padding(16.dp),
-                    color=Color(0xFF172B3A),style=MaterialTheme.typography.bodySmall)
+                    color=Color.White,style=MaterialTheme.typography.bodySmall)
             }
             Text("GLB Server Path: https://aaii.asia/bagan/3d/models/",color=Color.DarkGray)
             Text("Reminder: a valid demo model is not a substitute for the actual temple GLB.",color=Color.DarkGray)
@@ -85,7 +85,7 @@ fun BaganDiagnosticsScreen(temples: List<Temple>, onBack: () -> Unit) {
 }
 private fun diagnosticReport(context: Context, temples: List<Temple>):String {
     val lines=mutableListOf<String>()
-    lines+="BAGAN Heritage Museum • V3.5.2"
+    lines+="BAGAN Heritage Museum • V3.8.4"
     lines+="Checked: "+SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.US).format(Date())
     lines+="Android: "+Build.VERSION.RELEASE+" (API "+Build.VERSION.SDK_INT+")"
     lines+="Device: "+Build.MANUFACTURER+" "+Build.MODEL
@@ -104,6 +104,13 @@ private fun diagnosticReport(context: Context, temples: List<Temple>):String {
         val file=ModelRepository.demo(context)
         lines+="Offline demo GLB: VALID ("+file.length()+" bytes)"
     }catch(e:Exception){lines+="Offline demo GLB: INVALID - "+e.localizedMessage}
+    lines+="----- OFFLINE LIGHTWEIGHT AR CGI -----"
+    var lightCount=0
+    temples.forEach { t ->
+        try { val file=ModelRepository.lightweightAr(context,t);lightCount++;lines+=t.nameEn+": CGI VALID ("+file.length()+" bytes)" }
+        catch(e:Exception){lines+=t.nameEn+": CGI ERROR: "+(e.localizedMessage ?: e.javaClass.simpleName)}
+    }
+    lines+="Lightweight CGI ready: $lightCount / "+temples.size
     var cached=0
     lines+="----- CACHED 3D MODELS -----"
     temples.forEach { t ->
