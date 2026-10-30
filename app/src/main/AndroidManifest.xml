@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
- <uses-permission android:name="android.permission.INTERNET"/>
- <application android:label="Bagan Heritage Real Systems" android:usesCleartextTraffic="false" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
-  <activity android:name=".ModelActivity" android:exported="false" android:screenOrientation="portrait"/>
-  <activity android:name=".MainActivity" android:exported="false" android:screenOrientation="portrait">
-   
+ <application android:allowBackup="false" android:label="BAGAN Heritage Museum" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:supportsRtl="true">
+  <activity android:name=".MainActivity" android:exported="true">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
   </activity>
-   <activity android:name=".NativeUiActivity" android:exported="false" android:screenOrientation="portrait">
-    
-  </activity>
-   <activity android:name=".SceneActivity" android:exported="true" android:screenOrientation="portrait"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
  </application>
 </manifest>
