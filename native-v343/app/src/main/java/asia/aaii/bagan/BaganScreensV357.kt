@@ -12,21 +12,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 
-private val darkBlue=Color(0xFF112A3D)
-private val goldV357=Color(0xFFBC863D)
-private val ivoryV357=Color(0xFFFFF7EA)
+private val darkBlue=Color(0xFFF9F5E9)
+private val goldV357=Color(0xFFFFD476)
+private val ivoryV357=Color(0xFF081B2A)
 
 @Composable private fun TitleV357(mm:String,en:String) {
  Column(Modifier.padding(vertical=12.dp)){
   Text(mm,fontSize=23.sp,fontWeight=FontWeight.Bold,color=darkBlue)
-  Text(en,fontSize=13.sp,color=Color.DarkGray)
+  Text(en,fontSize=13.sp,color=Color(0xFFBACBD9))
  }
 }
 @Composable private fun ActionV357(mm:String,en:String,click:()->Unit) {
- ElevatedCard(onClick=click,modifier=Modifier.fillMaxWidth()) {
+ ElevatedCard(onClick=click,modifier=Modifier.fillMaxWidth(),colors=CardDefaults.elevatedCardColors(containerColor=Color(0xFF142D40))) {
   Column(Modifier.fillMaxWidth().padding(16.dp)){
    Text(mm,fontWeight=FontWeight.Bold,color=darkBlue)
-   Text(en,color=Color.DarkGray,fontSize=12.sp)
+   Text(en,color=Color(0xFFBACBD9),fontSize=12.sp)
   }
  }
 }
@@ -34,11 +34,11 @@ private val ivoryV357=Color(0xFFFFF7EA)
  LazyColumn(Modifier.fillMaxSize().background(ivoryV357),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
   item{TitleV357("ဆက်တင်များ","Settings")}
   item{ActionV357("ဘာသာစကား — $language","Language",onLanguage)}
-  item{ElevatedCard(Modifier.fillMaxWidth()){Row(Modifier.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
+  item{ElevatedCard(Modifier.fillMaxWidth(),colors=CardDefaults.elevatedCardColors(containerColor=Color(0xFF142D40))){Row(Modifier.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
    Column(Modifier.weight(1f)){Text("အင်တာနက်မလိုသည့်ပုံစံ",color=darkBlue,fontWeight=FontWeight.Bold);Text("Offline Mode",fontSize=12.sp)}
    Switch(checked=offline,onCheckedChange=onOffline)
   }}}
-  item{ElevatedCard(Modifier.fillMaxWidth()){Row(Modifier.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
+  item{ElevatedCard(Modifier.fillMaxWidth(),colors=CardDefaults.elevatedCardColors(containerColor=Color(0xFF142D40))){Row(Modifier.padding(16.dp),verticalAlignment=Alignment.CenterVertically){
    Column(Modifier.weight(1f)){Text("3D မြန်ဆန်သောစနစ်",color=darkBlue,fontWeight=FontWeight.Bold);Text("Fast 3D Mode (recommended for Samsung)",fontSize=12.sp)}
    Switch(checked=fastMode,onCheckedChange=onFastMode)
   }}}
