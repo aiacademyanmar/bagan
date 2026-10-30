@@ -61,7 +61,9 @@ fun BaganHeritageApp(
  temples:List<Temple>,
  onMap:(Temple)->Unit,
  onAR:(Temple)->Unit,
- onSpeak:(String)->Unit
+ onSpeak:(String)->Unit,
+ onStopSpeech:()->Unit,
+ onSpeechRate:(Float)->Unit
 ) {
  val ctx=LocalContext.current
  val prefs=remember {ctx.getSharedPreferences("bagan_heritage_350",0)}
@@ -233,9 +235,9 @@ fun BaganHeritageApp(
       })
     6->ArInstructions(selected,onStart={selected?.let{onAR(it)}},onBack={go(4)},onModel={selected?.let{loadModel(it)} ?: go(3)})
     7->MapPage(temples,onDirections={onMap(it)},onDetail={openTemple(it)})
-    8->GalleryPage(selected,imageTab,{imageTab=it},onDetail={go(4)})
-    9->TimelineV356(onSpeak={onSpeak(it)})
-    10->AudioPage(selected,onSpeak={onSpeak(it)})
+    8->BaganGalleryV382(selected,onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAr={go(6)})
+    9->BaganHistoryV382(onSpeak={onSpeak(it)})
+    10->BaganAudioV382(selected,onSpeak={onSpeak(it)},onStop=onStopSpeech,onRate=onSpeechRate)
     11->RoutesV356(temples,details={openTemple(it)},directions={onMap(it)})
     12->FavoritesV356(temples.filter{it.id in fav},details={openTemple(it)},remove={favorite(it)})
     13->V354Search(temples,query,{query=it},onDetails={openTemple(it)},onThreeD={loadModel(it)})
