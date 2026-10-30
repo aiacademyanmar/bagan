@@ -1,0 +1,49 @@
+name: Publish BAGAN V3.8.4 APK Direct Download
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-bagan-v384-direct-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify V3.8.4 source
+        run: |
+          grep -q 'versionName = "3.8.4"' native-v343/app/build.gradle.kts
+          test -f native-v343/app/src/main/java/asia/aaii/bagan/NativeARActivity.kt
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Test and compile APK
+        working-directory: native-v343
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+      - name: Verify and checksum APK
+        run: |
+          cp native-v343/app/build/outputs/apk/debug/app-debug.apk BAGAN-Heritage-V3.8.4.apk
+          unzip -t BAGAN-Heritage-V3.8.4.apk | tail -1
+          sha256sum BAGAN-Heritage-V3.8.4.apk > BAGAN-Heritage-V3.8.4.apk.sha256
+      - name: Publish public GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view v3.8.4 >/dev/null 2>&1; then
+            gh release create v3.8.4 --title "BAGAN Heritage Museum V3.8.4 — Native AR and Offline CGI" --notes "Installable debug APK. Native AR local file loading, CPU-optimized plane checks and CGI diagnostics. Device-level testing is still required."
+          fi
+          gh release upload v3.8.4 BAGAN-Heritage-V3.8.4.apk BAGAN-Heritage-V3.8.4.apk.sha256 --clobber
