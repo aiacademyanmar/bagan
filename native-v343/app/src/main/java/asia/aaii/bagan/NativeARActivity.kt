@@ -32,7 +32,7 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * BAGAN V3.8.0: Lightweight-only native ARCore viewer.
+ * BAGAN V3.8.4: Lightweight-only native ARCore viewer.
  * NEVER loads high-resolution/downloaded original GLBs into the AR scene.
  * Source must be prepared via ModelRepository.lightweightAr() and validated.
  * Model placement happens on an explicit tap with a real AR hit test.
@@ -166,6 +166,8 @@ private fun LightweightArScene(
     var tracking by remember { mutableStateOf(false) }
     var detectedPlane by remember { mutableStateOf(false) }
     var loadReady by remember { mutableStateOf(false) }
+    var checkedFrames by remember { mutableIntStateOf(0) }
+    var lastTrackingReason by remember { mutableStateOf("") }
     var problem by remember { mutableStateOf<String?>(null) }
     var viewSize by remember { mutableStateOf(IntSize.Zero) }
     val latestFrame = remember { AtomicReference<Frame?>(null) }
@@ -186,20 +188,30 @@ private fun LightweightArScene(
             },
             onSessionUpdated = { session, frame ->
                 latestFrame.set(frame)
+                // Avoid scanning all ARCore planes on every rendered frame.
+                // Reduces allocations and CPU work on Samsung midrange devices.
                 val nowTracking = frame.camera.trackingState == TrackingState.TRACKING
                 if (nowTracking != tracking) tracking = nowTracking
-                val found = nowTracking && session.getAllTrackables(Plane::class.java)
-                    .any {
-                        it.type == Plane.Type.HORIZONTAL_UPWARD_FACING &&
-                        it.trackingState == TrackingState.TRACKING &&
-                        it.subsumedBy == null
+                checkedFrames++
+                if (!nowTracking) {
+                    detectedPlane = false
+                    val reason=frame.camera.trackingFailureReason.toString()
+                    if(reason!=lastTrackingReason)lastTrackingReason=reason
+                } else if(checkedFrames % 12 == 0 || !detectedPlane) {
+                    val found=session.getAllTrackables(Plane::class.java).any {
+                        it.type==Plane.Type.HORIZONTAL_UPWARD_FACING &&
+                        it.trackingState==TrackingState.TRACKING &&
+                        it.subsumedBy==null
                     }
-                if (found != detectedPlane) detectedPlane = found
+                    if(found!=detectedPlane)detectedPlane=found
+                }
             }
         ) {
             anchor?.let { a ->
                 AnchorNode(anchor = a) {
-                    val instance = rememberModelInstance(modelLoader, modelUri)
+                    // IMPORTANT: file:// paths must use fileLocation, NOT assetFileLocation.
+                    // Previous positional overload treated the local file as a bundled asset.
+                    val instance = rememberModelInstance(modelLoader = modelLoader, fileLocation = modelUri)
                     if (instance != null) {
                         ModelNode(
                             modelInstance = instance,
@@ -231,7 +243,7 @@ private fun LightweightArScene(
                     problem != null -> problem!!
                     anchor != null && loadReady -> "CGI placed • Walk around to explore"
                     anchor != null -> "Placing CGI • Loading model…"
-                    !tracking -> "Move phone slowly until camera tracking starts"
+                    !tracking -> "Tracking unavailable: $lastTrackingReason • Move phone slowly"
                     !detectedPlane -> "Point at a flat floor or table"
                     else -> "Surface detected • Tap Place CGI"
                 },
@@ -285,7 +297,7 @@ private fun LightweightArScene(
                 TextButton(onClick = onExit) { Text("Close", color = Color.White) }
             }
             Text(
-                "OFFLINE STYLIZED CGI • 13 lightweight models • Not a historical 3D scan",
+                "OFFLINE STYLIZED CGI • ARCore • Not a historical 3D scan",
                 color = Color(0xFFF5D99C),
                 style = MaterialTheme.typography.labelSmall
             )
