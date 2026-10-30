@@ -112,8 +112,8 @@ fun BaganHeritageApp(
   }
  }
 
- fun go(n:Int) { route=n.coerceIn(1,27) }
- BackHandler(enabled=route!=2 && route!=27) { go(when(route){4->3;5,6,8,10,19,20->4;24->23;17,21,26->16;else->2}) }
+ fun go(n:Int) { route=n.coerceIn(1,28) }
+ BackHandler(enabled=route!=2 && route!=27) { go(when(route){4->3;5,6,8,10,19,20->4;24->23;17,21,26,28->16;else->2}) }
  fun openTemple(t:Temple){selected=t;go(4)}
  fun favorite(t:Temple){
   fav=if(t.id in fav)fav-t.id else fav+t.id
@@ -221,7 +221,7 @@ fun BaganHeritageApp(
   Box(Modifier.weight(1f).fillMaxWidth()){
    when(route){
     1->Splash(onStart={go(2)})
-    2->V361Home(temples,onSearch={go(13)},onNavigate={p-> if(p==5) selected?.let{loadModel(it)} ?: go(3) else go(p)},onTemple={openTemple(it)})
+    2->BaganHomeV383(temples,onSearch={go(13)},navigate={go(it)},onDetails={openTemple(it)},on3D={loadModel(it)},onAR={selected=it;go(6)},onFavorite={favorite(it)},favorites=fav)
     3->PagodaList(temples,query,{query=it},category,{category=it},{openTemple(it)},{favorite(it)},{loadModel(it)},{selected=it;go(6)},{onMap(it)},fav)
     4->TempleDetail(selected ?: temples.first(),infoTab,{infoTab=it},
       onModel={selected?.let{loadModel(it)}},onAR={go(6)},onMap={selected?.let{onMap(it)}},
@@ -245,7 +245,7 @@ fun BaganHeritageApp(
     15->OfflinePage(temples,bulkStatus,onBatch={bulkStart++},onView={loadModel(it)},
       onImport={zipPicker.launch(arrayOf("application/zip","application/octet-stream"))},
       importing=importBusy,refresh=offlineRevision)
-    16->SettingsV357(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)},fastMode=fastMode,onFastMode={fastMode=it;prefs.edit().putBoolean("fast_3d_mode",it).apply()})
+    16->SettingsV383(language,onLanguage={showLang=true},offline=onlineOnly,onOffline={onlineOnly=it;prefs.edit().putBoolean("offline_mode",it).apply()},onHelp={go(17)},onProfile={go(26)},onDiagnostics={go(21)},onStorage={go(28)},onDownload={go(15)},fastMode=fastMode,onFastMode={fastMode=it;prefs.edit().putBoolean("fast_3d_mode",it).apply()})
     17->HelpV357(onThreeD={selected?.let{loadModel(it)} ?: go(3)},onAR={go(6)},onMap={go(7)})
     18->AboutV357(onHome={go(2)})
     19->LoadingPage(selected,loadProgress,onCancel={go(4)})
@@ -257,9 +257,10 @@ fun BaganHeritageApp(
     25->RelatedPage(temples,selected,onSelect={openTemple(it)})
     26->ProfileV357(savedCount=fav.size,onFavorites={go(12)},onHome={go(2)})
     27->ExitV357(onCancel={go(2)},onExit={(ctx as? android.app.Activity)?.finish()})
+    28->BaganCacheScreenV383(onBack={go(16)})
    }
   }
-  if(route!=1 && route!=5 && route!=6 && route!=19 && route!=20 && route!=27) V361BottomBar(route,onNavigate={go(it)})
+  if(route!=1 && route!=5 && route!=6 && route!=19 && route!=20 && route!=27 && route!=28) BaganBottomBarV383(route,navigate={go(it)})
  }
  if(showLang) AlertDialog(onDismissRequest={showLang=false},title={Text("Language / ဘာသာစကား")},
   text={Column {
