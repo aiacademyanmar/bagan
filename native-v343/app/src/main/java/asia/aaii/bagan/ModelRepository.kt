@@ -107,6 +107,9 @@ object ModelRepository {
     }
     fun demo(context: Context): File {
         val file = File(context.filesDir, "bagan_demo_pagoda.glb")
+        if (file.exists()) {
+            try { validate(file); return file } catch (_: IOException) { file.delete() }
+        }
         if (!file.exists()) {
             context.assets.open("models/demo_pagoda.glb").use { input ->
                 file.outputStream().use { output -> input.copyTo(output) }
