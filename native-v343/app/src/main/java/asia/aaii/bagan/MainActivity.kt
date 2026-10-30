@@ -31,6 +31,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     private var speech: TextToSpeech? = null
     private var speechReady = false
+    private var speechSpeed = 1.0f
     private val crashPrefName = "bagan_crash_report_v367"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
                         onRetry = { showRecovery = true },
                         onSafeMode = { safeMode = true }
                     )
-                    else -> BaganEntryFlow(temples, ::launchMap, ::launchAr, ::speakGuide)
+                    else -> BaganEntryFlow(temples, ::launchMap, ::launchAr, ::speakGuide, ::stopGuide, ::setGuideRate)
                 }
             }
         }
@@ -92,17 +93,32 @@ class MainActivity : ComponentActivity() {
             if (speech == null) {
                 speech = TextToSpeech(this) { status ->
                     speechReady = status == TextToSpeech.SUCCESS
-                    if (speechReady) speech?.language = Locale.US
+                    if (speechReady) {
+                        val result = speech?.setLanguage(Locale.US) ?: TextToSpeech.LANG_NOT_SUPPORTED
+                        if(result >= TextToSpeech.LANG_AVAILABLE) {
+                            speech?.setSpeechRate(speechSpeed)
+                            speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "bagan-guide")
+                        } else runOnUiThread {
+                            Toast.makeText(this, "English TTS voice is not installed.", Toast.LENGTH_LONG).show()
+                        }
+                    } else runOnUiThread {
+                        Toast.makeText(this, "TTS engine initialization failed.", Toast.LENGTH_LONG).show()
+                    }
                 }
-                Toast.makeText(this, "အသံဖတ်စနစ်ကို စတင်နေပါသည်။ ထပ်နှိပ်ပါ။", Toast.LENGTH_SHORT).show()
             } else if (speechReady) {
                 speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "bagan-guide")
             } else {
-                Toast.makeText(this, "Text-to-Speech မရနိုင်သေးပါ။", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Text-to-Speech စတင်နေပါသည်။", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Audio မရနိုင်ပါ: ${e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun stopGuide() { runCatching { speech?.stop() } }
+    private fun setGuideRate(rate: Float) {
+        speechSpeed=rate.coerceIn(0.75f,1.5f)
+        runCatching { speech?.setSpeechRate(speechSpeed) }
     }
 
     override fun onDestroy() {
