@@ -21,7 +21,9 @@ fun BaganEntryFlow(
     temples: List<Temple>,
     onMap: (Temple)->Unit,
     onAR: (Temple)->Unit,
-    onSpeak: (String)->Unit
+    onSpeak: (String)->Unit,
+    onStopSpeech: ()->Unit,
+    onSpeechRate: (Float)->Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("bagan_onboarding_v353",0) }
@@ -79,7 +81,7 @@ fun BaganEntryFlow(
                 Text("ပင်မစာမျက်နှာသို့",fontSize=17.sp)
             }
         }
-        else -> BaganHeritageApp(temples,onMap,onAR,onSpeak)
+        else -> BaganHeritageApp(temples,onMap,onAR,onSpeak,onStopSpeech,onSpeechRate)
     }
 }
 
