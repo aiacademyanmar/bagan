@@ -9,8 +9,8 @@ android {
         applicationId = "asia.aaii.bagan"
         minSdk = 26
         targetSdk = 28
-        versionCode = 391
-        versionName = "3.8.9-splash-fix"
+        versionCode = 392
+        versionName = "3.8.9-logo-fix2"
     }
     sourceSets {
         getByName("main") {
