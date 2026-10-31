@@ -14,7 +14,7 @@ class HomeActivity : Activity() {
   val scroll=ScrollView(this).apply{setBackgroundColor(navy)}
   val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(22,30,22,28)}
   scroll.addView(root)
-  fun label(txt:String,size:Float,color:Int=Color.WHITE):TextView = TextView(this).apply{text=txt;textSize=size;setTextColor(color);gravity=Gravity.CENTER;textAlignment=TEXT_ALIGNMENT_CENTER;setPadding(6,12,6,12)}
+  fun label(txt:String,size:Float,color:Int=Color.WHITE):TextView = TextView(this).apply{text=txt;textSize=size;setTextColor(color);gravity=Gravity.CENTER;textAlignment=android.view.View.TEXT_ALIGNMENT_CENTER;setPadding(6,12,6,12)}
   fun card(title:String,subtitle:String):LinearLayout {
    val layout=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;gravity=Gravity.CENTER;setPadding(12,20,12,20)
     background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.rgb(16,48,68),Color.rgb(3,23,36))).apply{cornerRadius=22f;setStroke(2,gold)} }
