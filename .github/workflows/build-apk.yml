@@ -16,41 +16,45 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: SDK
+      - name: Install Android SDK
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Fetch Scene 01 reference asset
+      - name: Prepare Scene 01 image
+        shell: bash
         run: |
           mkdir -p app/src/main/res/drawable-nodpi
-          python3 - <<'PY'
+          if [ -f app/src/main/res/drawable-nodpi/bagan_scene01.jpg ]; then
+            echo "Using committed Scene 01 artwork"
+          else
+            python3 - <<'PY'
           import urllib.request, struct, zlib
-          output="app/src/main/res/drawable-nodpi/bagan_scene01.png"
-          url="https://drive.google.com/uc?export=download&id=1lbZhBPbz_a41_ATsINLS1KSb-YI4gsiU"
+          out = "app/src/main/res/drawable-nodpi/bagan_scene01.png"
+          url = "https://drive.google.com/uc?export=download&id=1lbZhBPbz_a41_ATsINLS1KSb-YI4gsiU"
           try:
-              data=urllib.request.urlopen(url, timeout=25).read()
-              if not data.startswith(b'\x89PNG\r\n\x1a\n'):
-                  raise ValueError("Drive did not return a PNG")
-              open(output,"wb").write(data)
-              print("Source reference PNG loaded")
+              data = urllib.request.urlopen(url, timeout=25).read()
+              if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise ValueError("Not a PNG file")
+              open(out, "wb").write(data)
           except Exception as e:
-              print("Reference unavailable, generating placeholder:", e)
-              width,height=720,1280
-              row=b'\x00'+bytes([2,17,34])*width
-              raw=row*height
-              def chunk(tag,d):return struct.pack('>I',len(d))+tag+d+struct.pack('>I',zlib.crc32(tag+d)&0xffffffff)
-              png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>2I5B',width,height,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')
-              open(output,"wb").write(png)
+              print("Reference download unavailable:",e)
+              w,h = 720,1280
+              def chunk(t,d): return struct.pack(">I",len(d))+t+d+struct.pack(">I",zlib.crc32(t+d)&0xffffffff)
+              raw=(b'\x00'+bytes([2,17,34])*w)*h
+              png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack(">2I5B",w,h,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')
+              open(out,"wb").write(png)
           PY
-      - name: Build debug APK
+          fi
+      - name: Compile APK
         run: gradle --no-daemon --stacktrace :app:assembleDebug
-      - name: Verify APK
+      - name: Verify APK package
         run: |
           test -s app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -12
           sha256sum app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: BAGAN-V3.8.8-Scene01-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 30
