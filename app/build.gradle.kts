@@ -6,11 +6,11 @@ android {
     namespace = "asia.aaii.bagan"
     compileSdk = 35
     defaultConfig {
-        applicationId = "asia.aaii.bagan"
+        applicationId = "asia.aaii.bagan.splashtest"
         minSdk = 26
         targetSdk = 28
-        versionCode = 392
-        versionName = "3.8.9-logo-fix2"
+        versionCode = 393
+        versionName = "3.8.9-screen-test3"
     }
     sourceSets {
         getByName("main") {
