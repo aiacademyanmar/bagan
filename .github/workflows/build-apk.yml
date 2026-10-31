@@ -16,42 +16,15 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: Install Android SDK
+      - name: Install SDK
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Prepare Scene 01 image
-        shell: bash
-        run: |
-          mkdir -p app/src/main/res/drawable-nodpi
-          if [ -f app/src/main/res/drawable-nodpi/bagan_scene01.jpg ]; then
-            echo "Using committed Scene 01 artwork"
-          else
-            python3 - <<'PY'
-          import urllib.request, struct, zlib
-          out = "app/src/main/res/drawable-nodpi/bagan_scene01.png"
-          url = "https://drive.google.com/uc?export=download&id=1lbZhBPbz_a41_ATsINLS1KSb-YI4gsiU"
-          try:
-              data = urllib.request.urlopen(url, timeout=25).read()
-              if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise ValueError("Not a PNG file")
-              open(out, "wb").write(data)
-          except Exception as e:
-              print("Reference download unavailable:",e)
-              w,h = 720,1280
-              def chunk(t,d): return struct.pack(">I",len(d))+t+d+struct.pack(">I",zlib.crc32(t+d)&0xffffffff)
-              raw=(b'\x00'+bytes([2,17,34])*w)*h
-              png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack(">2I5B",w,h,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')
-              open(out,"wb").write(png)
-          PY
-          fi
-      - name: Compile APK
-        run: gradle --no-daemon --stacktrace :app:assembleDebug
-      - name: Verify APK package
-        run: |
-          test -s app/build/outputs/apk/debug/app-debug.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -12
-          sha256sum app/build/outputs/apk/debug/app-debug.apk
+      - name: Compile
+        run: gradle --no-daemon :app:assembleDebug --stacktrace
+      - name: Check APK
+        run: test -s app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: BAGAN-V3.8.8-Scene01-debug-APK
